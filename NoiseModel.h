@@ -63,7 +63,7 @@ class NoiseModel
 
         // Implicit elements of full Cholesky
         // decomposition of C = C1 `kroneckerProduct` C2
-        inline double cholesky_element(int i, int j) const;
+        inline double cholesky_element(size_t i, size_t j) const;
 
         // Log determinant
         double log_det() const;

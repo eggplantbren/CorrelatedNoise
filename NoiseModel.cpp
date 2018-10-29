@@ -92,7 +92,7 @@ void NoiseModel::compute_Cs()
 }
 
 
-inline double NoiseModel::cholesky_element(int i, int j) const
+inline double NoiseModel::cholesky_element(size_t i, size_t j) const
 {
     // It's lower triangular
     if(j > i)
