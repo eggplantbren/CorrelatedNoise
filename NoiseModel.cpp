@@ -21,8 +21,8 @@ void NoiseModel::from_prior(DNest4::RNG& rng)
     DNest4::Cauchy cauchy(0.0, 5.0);
 
     // Trivial flat priors
-    sigma0 = 100.0*rng.rand();
-    L = 100.0*rng.rand();
+    sigma0 = 1.0;//100.0*rng.rand();
+    L = 2.0;//100.0*rng.rand();
 
     compute_Cs();
 }
@@ -42,6 +42,7 @@ double NoiseModel::perturb(DNest4::RNG& rng)
         L += 100.0*rng.randh();
         DNest4::wrap(L, 0.0, 100.0);
     }
+    compute_Cs();
 
     return logH;
 }

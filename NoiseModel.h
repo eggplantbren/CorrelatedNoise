@@ -31,7 +31,7 @@ class NoiseModel
         double sigma0;      // Coefficient
         double L;           // Length scales
 
-        // Covariance matrices (1-D)
+        // "Covariance" matrices (factors along the 1-D dimensions)
         Matrix C1, C2;
 
         // Cholesky decompositions as matrices
