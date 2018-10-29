@@ -14,7 +14,7 @@ using Matrix = Eigen::Matrix<double,
                             Eigen::Dynamic,
                             Eigen::Dynamic,
                             Eigen::RowMajor>;
-using Vector = Eigen::Matrix<double, Eigen::Dynamic, 1, Eigen::RowMajor>;
+using Vector = Eigen::VectorXd;
 using Cholesky = Eigen::LLT<Matrix>;
 
 
@@ -57,6 +57,9 @@ class NoiseModel
 
         // Evaluate log likelihood
         double log_likelihood(const Vector& image) const;
+
+        // Generate an image
+        Vector generate_image(DNest4::RNG& rng) const;
 
         // Print to stream
         void print(std::ostream& out) const;

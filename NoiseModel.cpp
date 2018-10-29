@@ -21,8 +21,8 @@ void NoiseModel::from_prior(DNest4::RNG& rng)
     DNest4::Cauchy cauchy(0.0, 5.0);
 
     // Trivial flat priors
-    sigma0 = 100.0*rng.rand();
-    L = 100.0*rng.rand();
+    sigma0 = 1.0;//100.0*rng.rand();
+    L = 10.0;//100.0*rng.rand();
 
     compute_Cs();
 }
@@ -83,6 +83,25 @@ double NoiseModel::cholesky_element(int i, int j) const
         return 0.0;
 
     return L1(i/nj, j/nj)*L2(i%nj, j%nj);
+}
+
+
+Vector NoiseModel::generate_image(DNest4::RNG& rng) const
+{
+    Vector normals(n);
+    Vector image(n);
+    for(size_t i=0; i<n; ++i)
+        normals(i) = rng.randn();
+
+    for(size_t i=0; i<n; ++i)
+    {
+        image(i) = 0.0;
+        for(size_t j=0; j<i; ++j)
+            image(i) += cholesky_element(i, j)*normals(j);
+        image(i) += cholesky_element(i, i)*normals(i);
+    }
+
+    return image;
 }
 
 void NoiseModel::print(std::ostream& out) const
