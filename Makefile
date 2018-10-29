@@ -1,6 +1,6 @@
 CXX = g++
 WARN = -Wall -Wextra -pedantic
-OPTIM = -O3 -g -DNDEBUG -march=native
+OPTIM = -O3 -DNDEBUG -march=native
 STD = -std=c++17
 INCLUDE = -I $(DNEST4_PATH)
 FLAGS = $(STD) $(OPTIM) $(WARN) $(INCLUDE)

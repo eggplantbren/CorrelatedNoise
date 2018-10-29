@@ -25,7 +25,7 @@ class NoiseModel
     private:
 
         // Image dimensions
-        size_t n1, n2, n;
+        int n1, n2, n;
 
         // Parameters
         double sigma0;      // Coefficient
@@ -44,7 +44,7 @@ class NoiseModel
     public:
 
         // Constructor. Provide image dimensions.
-        NoiseModel(size_t _n1, size_t _n2);
+        NoiseModel(int _n1, int _n2);
 
         // Generate from prior
         void from_prior(DNest4::RNG& rng);
@@ -63,7 +63,7 @@ class NoiseModel
 
         // Implicit elements of full Cholesky
         // decomposition of C = C1 `kroneckerProduct` C2
-        inline double cholesky_element(size_t i, size_t j) const;
+        inline double cholesky_element(int i, int j) const;
 
         // Log determinant
         double log_det() const;

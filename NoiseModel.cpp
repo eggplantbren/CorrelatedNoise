@@ -6,7 +6,7 @@
 namespace CorrelatedNoise
 {
 
-NoiseModel::NoiseModel(size_t _n1, size_t _n2)
+NoiseModel::NoiseModel(int _n1, int _n2)
 :n1(_n1)
 ,n2(_n2)
 ,n(n1*n2)
@@ -50,7 +50,7 @@ double NoiseModel::perturb(DNest4::RNG& rng)
 double NoiseModel::log_det() const
 {
     double result = 0.0;
-    for(size_t i=0; i<n; ++i)
+    for(int i=0; i<n; ++i)
         result += 2.0*log(cholesky_element(i, i));
     return result;
 }
@@ -61,9 +61,9 @@ void NoiseModel::compute_Cs()
     double dist;
     double tau = 1.0/(L*L);
 
-    for(size_t i=0; i<n1; ++i)
+    for(int i=0; i<n1; ++i)
     {
-        for(size_t j=i; j<n1; ++j)
+        for(int j=i; j<n1; ++j)
         {
             dist = std::abs((double)i - (double)j);
             C1(i, j) = sigma0*exp(-dist*dist*tau);
@@ -73,9 +73,9 @@ void NoiseModel::compute_Cs()
         // To ensure positive definiteness
         C1(i, i) += 1E-3*sigma0*L;
     }
-    for(size_t i=0; i<n2; ++i)
+    for(int i=0; i<n2; ++i)
     {
-        for(size_t j=i; j<n2; ++j)
+        for(int j=i; j<n2; ++j)
         {
             dist = std::abs((double)i - (double)j);
             C2(i, j) = sigma0*exp(-dist*dist*tau);
@@ -92,7 +92,7 @@ void NoiseModel::compute_Cs()
 }
 
 
-inline double NoiseModel::cholesky_element(size_t i, size_t j) const
+inline double NoiseModel::cholesky_element(int i, int j) const
 {
     // It's lower triangular
     if(j > i)
@@ -106,13 +106,13 @@ Vector NoiseModel::generate_image(DNest4::RNG& rng) const
 {
     Vector normals(n);
     Vector image(n);
-    for(size_t i=0; i<n; ++i)
+    for(int i=0; i<n; ++i)
         normals(i) = rng.randn();
 
-    for(size_t i=0; i<n; ++i)
+    for(int i=0; i<n; ++i)
     {
         image(i) = 0.0;
-        for(size_t j=0; j<=i; ++j)
+        for(int j=0; j<=i; ++j)
             image(i) += cholesky_element(i, j)*normals(j);
     }
 
