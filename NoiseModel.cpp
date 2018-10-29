@@ -15,7 +15,8 @@ NoiseModel::NoiseModel(size_t _ni, size_t _nj)
 
 void NoiseModel::compute_Cs()
 {
-    double dist = 0.0;
+    // Fill the matrices
+    double dist;
     double tau = 1.0/(L*L);
     for(size_t i1=0; i1<ni; ++i1)
     {
@@ -35,6 +36,10 @@ void NoiseModel::compute_Cs()
             C2(j2, j1) = C2(j1, j2);
         }
     }
+
+    // Compute decompositions
+    L1 = C1.llt();
+    L2 = C2.llt();
 }
 
 } // namespace CorrelatedNoise
