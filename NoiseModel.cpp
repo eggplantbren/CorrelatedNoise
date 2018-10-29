@@ -1,5 +1,6 @@
 #include "NoiseModel.h"
 #include <DNest4/code/Distributions/Cauchy.h>
+#include <DNest4/code/Utils.h>
 #include <iostream>
 
 namespace CorrelatedNoise
@@ -19,15 +20,30 @@ void NoiseModel::from_prior(DNest4::RNG& rng)
 {
     DNest4::Cauchy cauchy(0.0, 5.0);
 
-    do
-    {
-        sigma0 = cauchy.generate(rng);
-    }while(std::abs(sigma0) > 100.0);
-    sigma0 = exp(sigma0);
-
-    L = exp(log(1.0) + 0.5*log(n));
+    // Trivial flat priors
+    sigma0 = 100.0*rng.rand();
+    L = 100.0*rng.rand();
 
     compute_Cs();
+}
+
+double NoiseModel::perturb(DNest4::RNG& rng)
+{
+    double logH = 0.0;
+
+    int which = rng.rand_int(2);
+    if(which == 0)
+    {
+        sigma0 += 100.0*rng.randh();
+        DNest4::wrap(sigma0, 0.0, 100.0);
+    }
+    else if(which == 0)
+    {
+        L += 100.0*rng.randh();
+        DNest4::wrap(L, 0.0, 100.0);
+    }
+
+    return logH;
 }
 
 void NoiseModel::compute_Cs()
@@ -40,7 +56,7 @@ void NoiseModel::compute_Cs()
         for(size_t i2=i1; i2<ni; ++i2)
         {
             dist = std::abs((double)i1 - (double)i2);
-            C1(i1, i2) = sigma0*exp(-dist*dist/tau);
+            C1(i1, i2) = sigma0*exp(-dist*dist*tau);
             C1(i2, i1) = C1(i1, i2);
         }
     }
@@ -49,7 +65,7 @@ void NoiseModel::compute_Cs()
         for(size_t j2=j1; j2<nj; ++j2)
         {
             dist = std::abs((double)j1 - (double)j2);
-            C2(j1, j2) = sigma0*exp(-dist*dist/tau);
+            C2(j1, j2) = sigma0*exp(-dist*dist*tau);
             C2(j2, j1) = C2(j1, j2);
         }
     }
