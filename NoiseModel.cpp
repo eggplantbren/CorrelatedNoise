@@ -1,4 +1,5 @@
 #include "NoiseModel.h"
+#include <DNest4/code/Distributions/Cauchy.h>
 
 namespace CorrelatedNoise
 {
@@ -11,6 +12,21 @@ NoiseModel::NoiseModel(size_t _ni, size_t _nj)
 ,C2(nj, nj)
 {
 
+}
+
+void NoiseModel::from_prior(DNest4::RNG& rng)
+{
+    DNest4::Cauchy cauchy(0.0, 5.0);
+
+    do
+    {
+        sigma0 = cauchy.generate(rng);
+    }while(std::abs(sigma0) > 100.0);
+    sigma0 = exp(sigma0);
+
+    L = exp(log(1.0) + 0.5*log(n));
+
+    compute_Cs();
 }
 
 void NoiseModel::compute_Cs()
@@ -38,8 +54,46 @@ void NoiseModel::compute_Cs()
     }
 
     // Compute decompositions
-    L1 = C1.llt();
-    L2 = C2.llt();
+    L1 = C1.llt().matrixL();
+    L2 = C2.llt().matrixL();
+}
+
+
+double NoiseModel::cholesky_element(int i, int j) const
+{
+    // It's lower triangular
+    if(j > i)
+        return 0.0;
+
+    return L1(i/ni, j/nj)*L2(i%ni, j%nj);
+}
+
+void NoiseModel::print(std::ostream& out) const
+{
+    for(size_t i=0; i<ni; ++i)
+    {
+        for(size_t j=0; j<ni; ++j)
+            out << C1(i, j) << ' '; 
+        out << '\n';
+    }
+
+
+    for(size_t i=0; i<nj; ++i)
+    {
+        for(size_t j=0; j<nj; ++j)
+            out << C2(i, j) << ' '; 
+        out << '\n';
+    }
+
+
+    for(size_t i=0; i<n; ++i)
+    {
+        for(size_t j=0; j<n; ++j)
+            out << cholesky_element(i, j) << ' '; 
+        out << '\n';
+    }
+
+    out << std::endl;
 }
 
 } // namespace CorrelatedNoise

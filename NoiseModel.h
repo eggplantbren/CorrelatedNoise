@@ -4,6 +4,7 @@
 #include <DNest4/code/RNG.h>
 #include <Eigen/Cholesky>
 #include <Eigen/Dense>
+#include <ostream>
 
 namespace CorrelatedNoise
 {
@@ -33,22 +34,32 @@ class NoiseModel
         // Covariance matrices (1-D)
         Matrix C1, C2;
 
-        // Cholesky decompositions
-        Cholesky L1, L2;
+        // Cholesky decompositions as matrices
+        Matrix L1, L2;
 
         // Compute covariance matrices
         void compute_Cs();
 
+        // Implicit elements of full Cholesky
+        // decomposition of C = C1 `kroneckerProduct` C2
+        double cholesky_element(int i, int j) const;
+
     public:
 
         // Constructor. Provide image dimensions.
-        NoiseModel(size_t _ni, size_t _njn);
+        NoiseModel(size_t _ni, size_t _nj);
 
         // Generate from prior
         void from_prior(DNest4::RNG& rng);
 
+        // Perturb
+        double perturb(DNest4::RNG& rng);
+
         // Evaluate log likelihood
         double log_likelihood(const Vector& image) const;
+
+        // Print to stream
+        void print(std::ostream& out) const;
 };
 
 }

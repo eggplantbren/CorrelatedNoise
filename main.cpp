@@ -6,10 +6,13 @@ using namespace CorrelatedNoise;
 
 int main()
 {
-    DNest4::RNG rng(0);
+    // An RNG
+    DNest4::RNG rng(time(0));
 
-    NoiseModel m(100, 110);
+    // Create a noise model
+    NoiseModel m(2, 3);
     m.from_prior(rng);
+    m.print(std::cout);
 
     return 0;
 }
