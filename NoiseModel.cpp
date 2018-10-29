@@ -21,8 +21,8 @@ void NoiseModel::from_prior(DNest4::RNG& rng)
     DNest4::Cauchy cauchy(0.0, 5.0);
 
     // Trivial flat priors
-    sigma0 = 1.0;//100.0*rng.rand();
-    L = 10.0;//100.0*rng.rand();
+    sigma0 = 1.5;//100.0*rng.rand();
+    L = 3; //10.0;//100.0*rng.rand();
 
     compute_Cs();
 }
@@ -57,7 +57,7 @@ void NoiseModel::compute_Cs()
         for(size_t j=i; j<n1; ++j)
         {
             dist = std::abs((double)i - (double)j);
-            C1(i, j) = sigma0*sigma0*exp(-dist*dist*tau);
+            C1(i, j) = sigma0*exp(-dist*dist*tau);
             C1(j, i) = C1(i, j);
         }
     }
@@ -66,7 +66,7 @@ void NoiseModel::compute_Cs()
         for(size_t j=i; j<n2; ++j)
         {
             dist = std::abs((double)i - (double)j);
-            C2(i, j) = sigma0*sigma0*exp(-dist*dist*tau);
+            C2(i, j) = sigma0*exp(-dist*dist*tau);
             C2(j, i) = C2(i, j);
         }
     }
@@ -107,7 +107,12 @@ Vector NoiseModel::generate_image(DNest4::RNG& rng) const
 
 void NoiseModel::print(std::ostream& out) const
 {
+    out << sigma0 << ' ' << L;
+}
 
+std::string NoiseModel::description()
+{
+    return "sigma0, L, ";
 }
 
 } // namespace CorrelatedNoise

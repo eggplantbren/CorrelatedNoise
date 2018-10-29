@@ -63,6 +63,9 @@ class NoiseModel
 
         // Print to stream
         void print(std::ostream& out) const;
+
+        // Header string
+        static std::string description();
 };
 
 }
