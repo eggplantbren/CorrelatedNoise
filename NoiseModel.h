@@ -44,6 +44,9 @@ class NoiseModel
         // decomposition of C = C1 `kroneckerProduct` C2
         double cholesky_element(int i, int j) const;
 
+        // Log determinant
+        double log_det() const;
+
     public:
 
         // Constructor. Provide image dimensions.
