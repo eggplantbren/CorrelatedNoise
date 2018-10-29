@@ -71,7 +71,7 @@ void NoiseModel::compute_Cs()
         }
 
         // To ensure positive definiteness
-        C1(i, i) += 1E-3*sigma0*L;
+        C1(i, i) += 1E-5*sigma0*L;
     }
     for(int i=0; i<n2; ++i)
     {
@@ -83,7 +83,7 @@ void NoiseModel::compute_Cs()
         }
 
         // To ensure positive definiteness
-        C2(i, i) += 1E-3*sigma0*L;
+        C2(i, i) += 1E-5*sigma0*L;
     }
 
     // Compute decompositions
@@ -95,8 +95,8 @@ void NoiseModel::compute_Cs()
 inline double NoiseModel::cholesky_element(int i, int j) const
 {
     // It's lower triangular
-    if(j > i)
-        return 0.0;
+//    if(j > i)
+//        return 0.0;
 
     return L1(i/n2, j/n2)*L2(i%n2, j%n2);
 }
