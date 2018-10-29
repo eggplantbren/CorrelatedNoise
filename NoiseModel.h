@@ -40,12 +40,6 @@ class NoiseModel
         // Compute covariance matrices
         void compute_Cs();
 
-        // Implicit elements of full Cholesky
-        // decomposition of C = C1 `kroneckerProduct` C2
-        double cholesky_element(int i, int j) const;
-
-        // Log determinant
-        double log_det() const;
 
     public:
 
@@ -66,6 +60,13 @@ class NoiseModel
 
         // Print to stream
         void print(std::ostream& out) const;
+
+        // Implicit elements of full Cholesky
+        // decomposition of C = C1 `kroneckerProduct` C2
+        double cholesky_element(int i, int j) const;
+
+        // Log determinant
+        double log_det() const;
 
         // Header string
         static std::string description();

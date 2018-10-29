@@ -21,8 +21,8 @@ void NoiseModel::from_prior(DNest4::RNG& rng)
     DNest4::Cauchy cauchy(0.0, 5.0);
 
     // Trivial flat priors
-    sigma0 = 1.0;//100.0*rng.rand();
-    L = 2.0;//100.0*rng.rand();
+    sigma0 = 100.0*rng.rand();
+    L = 10.0*rng.rand();
 
     compute_Cs();
 }
@@ -69,6 +69,9 @@ void NoiseModel::compute_Cs()
             C1(i, j) = sigma0*exp(-dist*dist*tau);
             C1(j, i) = C1(i, j);
         }
+
+        // To ensure positive definiteness
+        C1(i, i) += 1E-3*sigma0*L;
     }
     for(size_t i=0; i<n2; ++i)
     {
@@ -78,6 +81,9 @@ void NoiseModel::compute_Cs()
             C2(i, j) = sigma0*exp(-dist*dist*tau);
             C2(j, i) = C2(i, j);
         }
+
+        // To ensure positive definiteness
+        C2(i, i) += 1E-3*sigma0*L;
     }
 
     // Compute decompositions
@@ -106,9 +112,8 @@ Vector NoiseModel::generate_image(DNest4::RNG& rng) const
     for(size_t i=0; i<n; ++i)
     {
         image(i) = 0.0;
-        for(size_t j=0; j<i; ++j)
+        for(size_t j=0; j<=i; ++j)
             image(i) += cholesky_element(i, j)*normals(j);
-        image(i) += cholesky_element(i, i)*normals(i);
     }
 
     return image;
