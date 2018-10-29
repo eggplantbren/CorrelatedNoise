@@ -65,7 +65,7 @@ void NoiseModel::compute_Cs()
     {
         for(int j=i; j<n1; ++j)
         {
-            dist = std::abs((double)i - (double)j);
+            dist = std::abs(i - j);
             C1(i, j) = sigma0*exp(-dist*dist*tau);
             C1(j, i) = C1(i, j);
         }
@@ -77,7 +77,7 @@ void NoiseModel::compute_Cs()
     {
         for(int j=i; j<n2; ++j)
         {
-            dist = std::abs((double)i - (double)j);
+            dist = std::abs(i - j);
             C2(i, j) = sigma0*exp(-dist*dist*tau);
             C2(j, i) = C2(i, j);
         }
@@ -101,6 +101,22 @@ inline double NoiseModel::cholesky_element(int i, int j) const
     return L1(i/n2, j/n2)*L2(i%n2, j%n2);
 }
 
+
+double NoiseModel::quadratic_form(const Vector& ys) const
+{
+    Vector solution(ys.size());
+
+    // Solve Lx = y
+    for(int i=0; i<solution.size(); ++i)
+    {
+        solution[i] = ys[i];
+        for(int j=0; j<i; ++j)
+            solution[i] -= cholesky_element(i, j)*solution[j];
+        solution[i] /= cholesky_element(i, i);
+    }
+
+    return solution.squaredNorm();
+}
 
 Vector NoiseModel::generate_image(DNest4::RNG& rng) const
 {
