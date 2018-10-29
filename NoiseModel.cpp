@@ -6,12 +6,12 @@
 namespace CorrelatedNoise
 {
 
-NoiseModel::NoiseModel(size_t _ni, size_t _nj)
-:ni(_ni)
-,nj(_nj)
-,n(ni*nj)
-,C1(ni, ni)
-,C2(nj, nj)
+NoiseModel::NoiseModel(size_t _n1, size_t _n2)
+:n1(_n1)
+,n2(_n2)
+,n(n1*n2)
+,C1(n1, n1)
+,C2(n2, n2)
 {
 
 }
@@ -51,22 +51,23 @@ void NoiseModel::compute_Cs()
     // Fill the matrices
     double dist;
     double tau = 1.0/(L*L);
-    for(size_t i1=0; i1<ni; ++i1)
+
+    for(size_t i=0; i<n1; ++i)
     {
-        for(size_t i2=i1; i2<ni; ++i2)
+        for(size_t j=i; j<n1; ++j)
         {
-            dist = std::abs((double)i1 - (double)i2);
-            C1(i1, i2) = sigma0*exp(-dist*dist*tau);
-            C1(i2, i1) = C1(i1, i2);
+            dist = std::abs((double)i - (double)j);
+            C1(i, j) = sigma0*sigma0*exp(-dist*dist*tau);
+            C1(j, i) = C1(i, j);
         }
     }
-    for(size_t j1=0; j1<nj; ++j1)
+    for(size_t i=0; i<n2; ++i)
     {
-        for(size_t j2=j1; j2<nj; ++j2)
+        for(size_t j=i; j<n2; ++j)
         {
-            dist = std::abs((double)j1 - (double)j2);
-            C2(j1, j2) = sigma0*exp(-dist*dist*tau);
-            C2(j2, j1) = C2(j1, j2);
+            dist = std::abs((double)i - (double)j);
+            C2(i, j) = sigma0*sigma0*exp(-dist*dist*tau);
+            C2(j, i) = C2(i, j);
         }
     }
 
@@ -82,7 +83,7 @@ double NoiseModel::cholesky_element(int i, int j) const
     if(j > i)
         return 0.0;
 
-    return L1(i/nj, j/nj)*L2(i%nj, j%nj);
+    return L1(i/n2, j/n2)*L2(i%n2, j%n2);
 }
 
 
@@ -106,29 +107,6 @@ Vector NoiseModel::generate_image(DNest4::RNG& rng) const
 
 void NoiseModel::print(std::ostream& out) const
 {
-    for(size_t i1=0; i1<ni; ++i1)
-    {
-        for(size_t i2=0; i2<ni; ++i2)
-            out << C1(i1, i2) << ' '; 
-        out << '\n';
-    }
-    out << "\n\n";
-
-
-    for(size_t j1=0; j1<nj; ++j1)
-    {
-        for(size_t j2=0; j2<nj; ++j2)
-            out << C2(j1, j2) << ' '; 
-        out << '\n';
-    }
-    out << "\n\n";
-
-    for(size_t i=0; i<n; ++i)
-    {
-        for(size_t j=0; j<n; ++j)
-            out << cholesky_element(i, j) << ' '; 
-        out << '\n';
-    }
 
 }
 

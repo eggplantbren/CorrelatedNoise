@@ -25,7 +25,7 @@ class NoiseModel
     private:
 
         // Image dimensions
-        size_t ni, nj, n;
+        size_t n1, n2, n;
 
         // Parameters
         double sigma0;      // Coefficient
@@ -47,7 +47,7 @@ class NoiseModel
     public:
 
         // Constructor. Provide image dimensions.
-        NoiseModel(size_t _ni, size_t _nj);
+        NoiseModel(size_t _n1, size_t _n2);
 
         // Generate from prior
         void from_prior(DNest4::RNG& rng);
