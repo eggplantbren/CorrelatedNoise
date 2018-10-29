@@ -55,6 +55,11 @@ double NoiseModel::log_det() const
     return result;
 }
 
+double NoiseModel::log_likelihood(const Vector& image) const
+{
+    return -0.5*n*log(2*M_PI) -0.5*log_det() - 0.5*quadratic_form(image);
+}
+
 void NoiseModel::compute_Cs()
 {
     // Fill the matrices
@@ -143,6 +148,12 @@ void NoiseModel::print(std::ostream& out) const
 std::string NoiseModel::description()
 {
     return "sigma0, L, ";
+}
+
+std::ostream& operator << (std::ostream& out, const NoiseModel& m)
+{
+    m.print(out);
+    return out;
 }
 
 } // namespace CorrelatedNoise

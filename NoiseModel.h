@@ -74,6 +74,8 @@ class NoiseModel
         static std::string description();
 };
 
+std::ostream& operator << (std::ostream& out, const NoiseModel& m);
+
 }
 
 #endif
