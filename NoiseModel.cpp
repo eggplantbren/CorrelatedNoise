@@ -1,5 +1,6 @@
 #include "NoiseModel.h"
 #include <DNest4/code/Distributions/Cauchy.h>
+#include <iostream>
 
 namespace CorrelatedNoise
 {
@@ -65,26 +66,27 @@ double NoiseModel::cholesky_element(int i, int j) const
     if(j > i)
         return 0.0;
 
-    return L1(i/ni, j/nj)*L2(i%ni, j%nj);
+    return L1(i/nj, j/nj)*L2(i%nj, j%nj);
 }
 
 void NoiseModel::print(std::ostream& out) const
 {
-    for(size_t i=0; i<ni; ++i)
+    for(size_t i1=0; i1<ni; ++i1)
     {
-        for(size_t j=0; j<ni; ++j)
-            out << C1(i, j) << ' '; 
+        for(size_t i2=0; i2<ni; ++i2)
+            out << C1(i1, i2) << ' '; 
         out << '\n';
     }
+    out << "\n\n";
 
 
-    for(size_t i=0; i<nj; ++i)
+    for(size_t j1=0; j1<nj; ++j1)
     {
-        for(size_t j=0; j<nj; ++j)
-            out << C2(i, j) << ' '; 
+        for(size_t j2=0; j2<nj; ++j2)
+            out << C2(j1, j2) << ' '; 
         out << '\n';
     }
-
+    out << "\n\n";
 
     for(size_t i=0; i<n; ++i)
     {
@@ -93,7 +95,6 @@ void NoiseModel::print(std::ostream& out) const
         out << '\n';
     }
 
-    out << std::endl;
 }
 
 } // namespace CorrelatedNoise
