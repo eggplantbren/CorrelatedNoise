@@ -2,21 +2,11 @@
 #define CorrelatedNoise_NoiseModel_h
 
 #include <DNest4/code/RNG.h>
-#include <Eigen/Cholesky>
-#include <Eigen/Dense>
+#include <armadillo>
 #include <ostream>
 
 namespace CorrelatedNoise
 {
-
-// Some type aliases similar to Eigen's
-using Matrix = Eigen::Matrix<double,
-                            Eigen::Dynamic,
-                            Eigen::Dynamic,
-                            Eigen::RowMajor>;
-using Vector = Eigen::VectorXd;
-using Cholesky = Eigen::LLT<Matrix>;
-
 
 // An instance of this class is a point in the parameter space of a
 // noise model, and associated functions (such as a likelihood evaluator!)
@@ -28,26 +18,9 @@ class NoiseModel
         int n1, n2, n;
 
         // Parameters
-        double L;           // Length scales
-
-        // "Covariance" matrices (factors along the 1-D dimensions)
-        Matrix C1, C2;
-
-        // Cholesky decompositions as matrices
-        Matrix L1, L2;
-
-        // Compute covariance matrices
-        void compute_Cs();
-
-        // Implicit elements of full Cholesky
-        // decomposition of C = C1 `kroneckerProduct` C2
-        inline double cholesky_element(int i, int j) const;
-
-        // Log determinant
-        double log_det() const;
-
-        // The quadratic form
-        double quadratic_form(const Vector& ys) const;
+        double L; // Length scale
+        double C; // Coefficient
+        double f; // Flat proportion
 
     public:
 
@@ -61,10 +34,10 @@ class NoiseModel
         double perturb(DNest4::RNG& rng);
 
         // Evaluate log likelihood
-        double log_likelihood(const Vector& image) const;
+        double log_likelihood(const arma::vec& image) const;
 
         // Generate an image
-        Vector generate_image(DNest4::RNG& rng) const;
+        arma::vec generate_image(DNest4::RNG& rng) const;
 
         // Print to stream
         void print(std::ostream& out) const;

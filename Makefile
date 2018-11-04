@@ -4,7 +4,7 @@ OPTIM = -O3 -DNDEBUG -march=native
 STD = -std=c++17
 INCLUDE = -I $(DNEST4_PATH)
 FLAGS = $(STD) $(OPTIM) $(WARN) $(INCLUDE)
-LINK = -L $(DNEST4_PATH)/DNest4/code
+LINK = -L $(DNEST4_PATH)/DNest4/code -larmadillo
 
 default:
 	$(CXX) $(FLAGS) -c *.cpp
