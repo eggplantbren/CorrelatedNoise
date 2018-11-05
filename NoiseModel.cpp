@@ -11,6 +11,8 @@ NoiseModel::NoiseModel(int _n1, int _n2, double _L)
 ,n2(_n2)
 ,n(n1*n2)
 ,L(_L)
+,C(1.0)
+,f(0.5)
 {
 
 }
@@ -46,6 +48,34 @@ double NoiseModel::perturb(DNest4::RNG& rng)
     }
 
     return logH;
+}
+
+double NoiseModel::log_likelihood(const arma::cx_mat& image_fft) const
+{
+    double logL = 0.0;
+
+    double inv_L = 1.0/L;
+
+    // The noise model kernel
+    arma::mat the_model(image_fft.n_rows, image_fft.n_cols);
+    for(int j=0; j<(int)the_model.n_cols; ++j)
+    {
+        jj = j % 
+        for(int i=0; i<(int)the_model.n_rows; ++i)
+        {
+            the_model(i, j) = C*exp(-0.5*pow(i*inv_L, 2) - 0.5*pow(j*inv_L, 2));
+        }
+    }
+
+    for(int i=0; i<the_model.n_rows; ++i)
+    {
+        for(int j=0; j<the_model.n_cols; ++j)
+            std::cout << the_model(i, j) << ' ';
+        std::cout << std::endl;
+    }
+    exit(0); 
+
+    return logL;
 }
 
 void NoiseModel::print(std::ostream& out) const

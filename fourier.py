@@ -7,7 +7,7 @@ import scipy.linalg
 #rng.seed(0)
 
 # Create coordinate grid
-n = 100
+n = 1024
 ii = np.arange(0, n)
 
 # Fourier transform of real
@@ -25,6 +25,7 @@ plt.axvline(n//2, linestyle="--")
 
 # Generate from FFT
 Y = np.zeros(n, dtype="complex128")
+env = np.exp(-0.5*ii**2/100.0) # Envelope
 for i in range(n):
     if i==0:
         Y[0] = rng.randn()
@@ -34,14 +35,17 @@ for i in range(n):
 #        print(i)
     else:
         Y[i] = np.conj(Y[n-i])
+        env[i] = env[n-i]
 #        print(i, n-i)
 
-    # Multiply in an envelope
-    if i <= n//2:
-        Y[i] *= np.exp(-0.5*i**2/20.0**2)
+env *= np.sqrt(n)/np.linalg.norm(env)
+
+# Multiply in an envelope
+Y *= env
 
 # Inverse FFT to real data
-y = np.fft.ifft(Y)/np.sqrt(n)
+y = np.fft.ifft(Y)*np.sqrt(n)
+print(np.std(y))
 
 plt.figure(2)
 plt.plot(np.real(Y), "o-")

@@ -34,7 +34,7 @@ class NoiseModel
         double perturb(DNest4::RNG& rng);
 
         // Evaluate log likelihood
-        double log_likelihood(const arma::vec& image) const;
+        double log_likelihood(const arma::cx_mat& image_fft) const;
 
         // Generate an image
         arma::vec generate_image(DNest4::RNG& rng) const;
