@@ -53,12 +53,11 @@ def make_psf(width):
 def log_likelihood(width, data_fourier):
     psf = make_psf(width)
     psf_fourier = unitary_fft2(psf)
-    sds = np.abs(psf_fourier.real)/np.sqrt(2)
-    ratio = data_fourier.real/sds
-    c = -0.5*np.log(2.0*np.pi)
-    return data_fourier.size*c - np.sum(np.log(sds)) \
-                - 0.5*np.sum(ratio**2)
-
+    dot_prod = np.real(data_fourier/psf_fourier\
+                        *np.conj(data_fourier/psf_fourier))
+    c = -0.5*data_fourier.size*np.log(2*np.pi)
+    return c - 0.5*np.sum(np.log(np.real(psf_fourier*np.conj(psf_fourier))))\
+                    - 0.5*np.sum(dot_prod)
 
 # Some white noise
 ns = rng.randn(ni, nj)
@@ -73,22 +72,25 @@ psf_fourier = unitary_fft2(psf)
 # Create the data
 data_fourier = ns_fourier*psf_fourier
 data = unitary_ifft2(data_fourier).real
-#print(np.sum(data**2))
 
+# Compare fourier/non-fourier calcs for independent data
+#print(log_likelihood(1E-4, data_fourier))
+#print(-data.size*0.5*np.log(2*np.pi) -0.5*np.sum(data**2))
+
+np.savetxt("data.txt", data)
 plt.imshow(data)
 plt.title("Data")
 plt.show()
 
-logw = np.linspace(0.0, 2.0, 10001)
+logw = np.log(5.0) + np.linspace(-0.5, 0.5, 5001)
 logl = np.empty(len(logw))
 for i in range(len(logw)):
     logl[i] = log_likelihood(np.exp(logw[i]), data_fourier)
     print(i+1)
 
-np.savetxt("data.txt", data)
-
-plt.plot(np.exp(logw), logl, "o-")
+plt.plot(np.exp(logw), np.exp(logl - logl.max()), "o-")
 plt.xlabel("Width")
-plt.ylabel("Error")
+plt.ylabel("Relative log likelihood")
+print("max(logl) =", np.max(logl))
 plt.show()
 
