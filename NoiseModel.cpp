@@ -87,19 +87,17 @@ double NoiseModel::perturb(DNest4::RNG& rng)
 
 double NoiseModel::log_likelihood(const arma::cx_mat& data_fft) const
 {
-    double logL = 0.0;
+    double logL = -0.5*log(2.0*M_PI)*ni*nj;
 
-    double sd, ratio;
-    double inv_root_two = 1.0/sqrt(2.0);
-    double constant = -0.5*log(2.0*M_PI);
+    arma::cx_mat ratio = data_fft / fft_of_psf;
 
     for(int j=0; j<nj; ++j)
     {
         for(int i=0; i<ni; ++i)
         {
-            sd = std::abs(real(fft_of_psf(i, j)))*inv_root_two;
-            ratio = real(data_fft(i, j))/sd;
-            logL += constant - log(sd) - 0.5*ratio*ratio;
+            logL += -0.5*log(std::real(fft_of_psf(i, j)
+                                        *std::conj(fft_of_psf(i, j))));
+            logL += -0.5*std::real(ratio(i, j)*std::conj(ratio(i, j)));
         }
     }
 
