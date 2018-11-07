@@ -39,7 +39,7 @@ int main()
             logl = logl2;
         }
 
-        if((i+1)%100 == 0)
+        if((i+1)%10 == 0)
             std::cout << std::setprecision(12) << (i+1) << ' ' << m << ' ' << logl << std::endl;
     }
 
