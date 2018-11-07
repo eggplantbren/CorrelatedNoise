@@ -18,8 +18,7 @@ class NoiseModel
         int ni, nj, n;
 
         // Parameters
-        double L; // Length scale
-        double C; // Coefficient
+        double sigma, L; // Coefficient and length scale
 
         // Fourier transform of the PSF
         arma::cx_mat fft_of_psf;
