@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from numba import jit
 import numpy as np
 import numpy.random as rng
 import scipy.linalg
@@ -6,55 +7,81 @@ import scipy.linalg
 # Seed RNG
 #rng.seed(0)
 
-# Create coordinate grid
-n = 1024
-ii = np.arange(0, n)
+# Image dimensions
+ni, nj = 200, 300
 
-# Fourier transform of real
-y = rng.randn(n)
-Y = np.fft.fft(y)/np.sqrt(n)
+@jit
+def make_grid():
+    """
+    Create a grid of indices.
+    """
+    ii = np.empty((ni, nj))
+    jj = np.empty((ni, nj))
+    for i in range(ni):
+        for j in range(nj):
+            ii[i, j] = i
+            jj[i, j] = j
+    return (ii, jj)
 
-# After element n//2, repeats in reverse and conjugated, up to full length n
-plt.figure(1)
-plt.plot(np.real(Y), "o-") # sd = 1/sqrt(2)
-                           # except for first element which has sd=1
-plt.plot(np.imag(Y), "o-") # sd = 1/sqrt(2)
-                           # except for first element which has sd=0
-plt.axhline(0.0, linestyle="--")
-plt.axvline(n//2, linestyle="--")
+@jit
+def unitary_fft2(y):
+    """
+    A unitary version of the fft2.
+    """
+    return np.fft.fft2(y)/np.sqrt(ni*nj)
 
-# Generate from FFT
-Y = np.zeros(n, dtype="complex128")
-env = np.exp(-0.5*ii**2/100.0) # Envelope
-for i in range(n):
-    if i==0:
-        Y[0] = rng.randn()
-#        print(i)
-    elif i <= n//2:
-        Y[i] = (rng.randn() + 1j*rng.randn())/np.sqrt(2.0)
-#        print(i)
-    else:
-        Y[i] = np.conj(Y[n-i])
-        env[i] = env[n-i]
-#        print(i, n-i)
+@jit
+def unitary_ifft2(y):
+    """
+    A unitary version of the ifft2.
+    """
+    return np.fft.ifft2(y)*np.sqrt(ni*nj)
 
-env *= np.sqrt(n)/np.linalg.norm(env)
 
-# Multiply in an envelope
-Y *= env
+# Create a grid
+ii, jj = make_grid()
 
-# Inverse FFT to real data
-y = np.fft.ifft(Y)*np.sqrt(n)
-print(np.std(y))
 
-plt.figure(2)
-plt.plot(np.real(Y), "o-")
-plt.plot(np.imag(Y), "o-")
-plt.axhline(0.0, linestyle="--")
-plt.axvline(n//2, linestyle="--")
+@jit
+def make_psf(width):
+    blur = np.exp(-0.5*(ii - ni/2)**2/width**2 - 0.5*(jj - nj/2)**2/width**2)
+    blur[ni//2, nj//2] += 1E-3
+    return blur
 
-plt.figure(3)
-plt.plot(np.real(y), "o-")
-plt.plot(np.imag(y), "o-", alpha=0.2)
+@jit
+def log_likelihood(width, data_fourier):
+    psf = make_psf(width)
+    psf_fourier = unitary_fft2(psf)
+    sds = np.abs(psf_fourier.real)/np.sqrt(2)
+    ratio = data_fourier.real/sds
+    return -np.sum(np.log(sds)) \
+                - 0.5*np.sum(ratio**2)
+
+
+# Some white noise
+ns = rng.randn(ni, nj)
+ns_fourier = unitary_fft2(ns)
+
+# A kernel to blur the noise with to produce some data
+psf = make_psf(5.0)
+psf = np.fft.fftshift(psf)
+psf_fourier = unitary_fft2(psf)
+
+# Create the data
+data_fourier = ns_fourier*psf_fourier
+data = unitary_ifft2(data_fourier).real
+plt.imshow(data)
+plt.title("Data")
+plt.show()
+
+logw = np.linspace(0.0, 2.0, 10001)
+logl = np.empty(len(logw))
+for i in range(len(logw)):
+    logl[i] = log_likelihood(np.exp(logw[i]), data_fourier)
+    print(i+1)
+
+plt.plot(np.exp(logw), np.exp(logl - logl.max()), "o-")
+plt.xlabel("Width")
+plt.ylabel("Error")
 plt.show()
 
