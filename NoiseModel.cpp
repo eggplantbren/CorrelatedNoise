@@ -19,7 +19,7 @@ void NoiseModel::from_prior(DNest4::RNG& rng)
 {
     // Trivial flat priors
     L = 100.0*rng.rand();
-    C = 100.0*rng.rand();
+    sigma = 100.0*rng.rand();
 
     compute_psf();
 }
@@ -46,7 +46,7 @@ void NoiseModel::compute_psf()
     for(int j=0; j<nj; ++j)
         for(int i=0; i<ni; ++i)
             tot_sq += pow(the_model(i, j), 2);
-    the_model = C*the_model/sqrt(tot_sq)*sqrt(ni*nj);
+    the_model = sigma*the_model/sqrt(tot_sq)*sqrt(ni*nj);
 
     // FFtshift
     arma::mat fft_shifted(ni, nj);
@@ -77,8 +77,8 @@ double NoiseModel::perturb(DNest4::RNG& rng)
     }
     else
     {
-        C += 100.0*rng.randh();
-        DNest4::wrap(C, 0.0, 100.0);
+        sigma += 100.0*rng.randh();
+        DNest4::wrap(sigma, 0.0, 100.0);
     }
     compute_psf();
 
@@ -90,7 +90,6 @@ double NoiseModel::log_likelihood(const arma::cx_mat& data_fft) const
     double logL = -0.5*log(2.0*M_PI)*ni*nj;
 
     arma::cx_mat ratio = data_fft / fft_of_psf;
-
     for(int j=0; j<nj; ++j)
     {
         for(int i=0; i<ni; ++i)
@@ -114,12 +113,12 @@ double NoiseModel::log_likelihood(const arma::cx_mat& data_fft) const
 
 void NoiseModel::print(std::ostream& out) const
 {
-    out << L << ' ' << C;
+    out << sigma << ' ' << L;
 }
 
 std::string NoiseModel::description()
 {
-    return "L, C";
+    return "sigma, L";
 }
 
 std::ostream& operator << (std::ostream& out, const NoiseModel& m)
