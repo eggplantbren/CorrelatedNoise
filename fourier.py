@@ -55,7 +55,8 @@ def log_likelihood(width, data_fourier):
     psf_fourier = unitary_fft2(psf)
     sds = np.abs(psf_fourier.real)/np.sqrt(2)
     ratio = data_fourier.real/sds
-    return -np.sum(np.log(sds)) \
+    c = -0.5*np.log(2.0*np.pi)
+    return data_fourier.size*c - np.sum(np.log(sds)) \
                 - 0.5*np.sum(ratio**2)
 
 
