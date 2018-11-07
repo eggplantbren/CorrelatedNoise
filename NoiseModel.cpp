@@ -65,6 +65,7 @@ double NoiseModel::perturb(DNest4::RNG& rng)
         C += 100.0*rng.randh();
         DNest4::wrap(C, 0.0, 100.0);
     }
+    compute_psf();
 
     return logH;
 }
@@ -77,9 +78,9 @@ double NoiseModel::log_likelihood(const arma::cx_mat& data_fft) const
     double inv_root_two = 1.0/sqrt(2.0);
     double C = -0.5*log(2.0*M_PI);
 
-    for(int j=0; j<n1; ++j)
+    for(int j=0; j<n2; ++j)
     {
-        for(int i=0; i<n2; ++i)
+        for(int i=0; i<n1; ++i)
         {
             sd = std::abs(real(fft_of_psf(i, j)))*inv_root_two;
             ratio = real(data_fft(i, j))/sd;
