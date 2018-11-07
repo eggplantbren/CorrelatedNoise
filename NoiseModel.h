@@ -20,7 +20,10 @@ class NoiseModel
         // Parameters
         double L; // Length scale
         double C; // Coefficient
-        double f; // Flat proportion
+
+        // Fourier transform of the PSF
+        arma::cx_mat fft_of_psf;
+        void compute_psf();
 
     public:
 
@@ -47,6 +50,7 @@ class NoiseModel
 };
 
 std::ostream& operator << (std::ostream& out, const NoiseModel& m);
+
 
 }
 
