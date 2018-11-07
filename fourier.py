@@ -5,7 +5,7 @@ import numpy.random as rng
 import scipy.linalg
 
 # Seed RNG
-#rng.seed(0)
+rng.seed(0)
 
 # Image dimensions
 ni, nj = 200, 300
@@ -79,6 +79,8 @@ logl = np.empty(len(logw))
 for i in range(len(logw)):
     logl[i] = log_likelihood(np.exp(logw[i]), data_fourier)
     print(i+1)
+
+np.savetxt("data.txt", data)
 
 plt.plot(np.exp(logw), np.exp(logl - logl.max()), "o-")
 plt.xlabel("Width")
