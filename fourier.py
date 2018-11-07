@@ -46,6 +46,7 @@ ii, jj = make_grid()
 def make_psf(width):
     blur = np.exp(-0.5*(ii - ni/2)**2/width**2 - 0.5*(jj - nj/2)**2/width**2)
     blur[ni//2, nj//2] += 1E-3
+    blur = blur/np.sqrt(np.sum(blur**2))*np.sqrt(blur.size)
     return blur
 
 @jit
@@ -61,6 +62,7 @@ def log_likelihood(width, data_fourier):
 # Some white noise
 ns = rng.randn(ni, nj)
 ns_fourier = unitary_fft2(ns)
+#print(np.sum(ns**2))
 
 # A kernel to blur the noise with to produce some data
 psf = make_psf(5.0)
@@ -70,6 +72,8 @@ psf_fourier = unitary_fft2(psf)
 # Create the data
 data_fourier = ns_fourier*psf_fourier
 data = unitary_ifft2(data_fourier).real
+#print(np.sum(data**2))
+
 plt.imshow(data)
 plt.title("Data")
 plt.show()

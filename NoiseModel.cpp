@@ -36,10 +36,17 @@ void NoiseModel::compute_psf()
         for(int i=0; i<ni; ++i)
         {
             rsq = (i - ni/2)*(i - ni/2) + (j - nj/2)*(j - nj/2);
-            the_model(i, j) = C*exp(-0.5*rsq*inv_L_squared);
+            the_model(i, j) = exp(-0.5*rsq*inv_L_squared);
         }
     }
-    the_model(ni/2, nj/2) += 1E-3*C;
+    the_model(ni/2, nj/2) += 1E-3;
+
+    // Normalise the PSF
+    double tot_sq = 0.0;
+    for(int j=0; j<nj; ++j)
+        for(int i=0; i<ni; ++i)
+            tot_sq += pow(the_model(i, j), 2);
+    the_model = C*the_model/sqrt(tot_sq)*sqrt(ni*nj);
 
     // FFtshift
     arma::mat fft_shifted(ni, nj);
@@ -84,7 +91,7 @@ double NoiseModel::log_likelihood(const arma::cx_mat& data_fft) const
 
     double sd, ratio;
     double inv_root_two = 1.0/sqrt(2.0);
-    double C = -0.5*log(2.0*M_PI);
+    double constant = -0.5*log(2.0*M_PI);
 
     for(int j=0; j<nj; ++j)
     {
@@ -92,7 +99,7 @@ double NoiseModel::log_likelihood(const arma::cx_mat& data_fft) const
         {
             sd = std::abs(real(fft_of_psf(i, j)))*inv_root_two;
             ratio = real(data_fft(i, j))/sd;
-            logL += C - log(sd) - 0.5*ratio*ratio;
+            logL += constant - log(sd) - 0.5*ratio*ratio;
         }
     }
 
