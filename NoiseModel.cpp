@@ -6,13 +6,11 @@
 namespace CorrelatedNoise
 {
 
-NoiseModel::NoiseModel(int _n1, int _n2, double _L)
-:n1(_n1)
-,n2(_n2)
-,n(n1*n2)
-,L(_L)
-,C(1.0)
-,fft_of_psf(n1, n2)
+NoiseModel::NoiseModel(int _ni, int _nj)
+:ni(_ni)
+,nj(_nj)
+,n(ni*nj)
+,fft_of_psf(ni, nj)
 {
 
 }
@@ -31,22 +29,32 @@ void NoiseModel::compute_psf()
     double inv_L_squared = 1.0/(L*L);
 
     // The noise model kernel
-    arma::mat the_model(n1, n2);
+    arma::mat the_model(ni, nj);
     double rsq;
-    int m, n;
-    for(int j=0; j<n1; ++j)
+    for(int j=0; j<nj; ++j)
     {
-        n = DNest4::mod(j - n2/2, n2);
-        for(int i=0; i<n2; ++i)
+        for(int i=0; i<ni; ++i)
         {
-            m = DNest4::mod(i - n1/2, n1);
-            rsq = (i - n1/2)*(i - n1/2) + (j - n2/2)*(j - n2/2);
-            the_model(m, n) = C*exp(-0.5*rsq*inv_L_squared);
+            rsq = (i - ni/2)*(i - ni/2) + (j - nj/2)*(j - nj/2);
+            the_model(i, j) = C*exp(-0.5*rsq*inv_L_squared);
         }
     }
-    the_model(n1/2, n2/2) += 1E-3*C;
+    the_model(ni/2, nj/2) += 1E-3*C;
 
-    fft_of_psf = arma::fft2(the_model)/sqrt(n1*n2);
+    // FFtshift
+    arma::mat fft_shifted(ni, nj);
+    int m, n;
+    for(int j=0; j<nj; ++j)
+    {
+        n = DNest4::mod(j - nj/2, nj);
+        for(int i=0; i<ni; ++i)
+        {
+            m = DNest4::mod(i - ni/2, ni);
+            fft_shifted(m, n) = the_model(i, j);
+        }
+    }
+
+    fft_of_psf = arma::fft2(fft_shifted)/sqrt(ni*nj);
 }
 
 double NoiseModel::perturb(DNest4::RNG& rng)
@@ -78,9 +86,9 @@ double NoiseModel::log_likelihood(const arma::cx_mat& data_fft) const
     double inv_root_two = 1.0/sqrt(2.0);
     double C = -0.5*log(2.0*M_PI);
 
-    for(int j=0; j<n2; ++j)
+    for(int j=0; j<nj; ++j)
     {
-        for(int i=0; i<n1; ++i)
+        for(int i=0; i<ni; ++i)
         {
             sd = std::abs(real(fft_of_psf(i, j)))*inv_root_two;
             ratio = real(data_fft(i, j))/sd;
@@ -88,9 +96,9 @@ double NoiseModel::log_likelihood(const arma::cx_mat& data_fft) const
         }
     }
 
-//    for(int i=0; i<n1; ++i)
+//    for(int i=0; i<ni; ++i)
 //    {
-//        for(int j=0; j<n2; ++j)
+//        for(int j=0; j<nj; ++j)
 //            std::cout << the_model(i, j) << ' ';
 //        std::cout << std::endl;
 //    }

@@ -15,7 +15,7 @@ class NoiseModel
     private:
 
         // Image dimensions
-        int n1, n2, n;
+        int ni, nj, n;
 
         // Parameters
         double L; // Length scale
@@ -28,7 +28,7 @@ class NoiseModel
     public:
 
         // Constructor. Provide image dimensions.
-        NoiseModel(int _n1, int _n2, double L=1.0);
+        NoiseModel(int _ni, int _nj);
 
         // Generate from prior
         void from_prior(DNest4::RNG& rng);

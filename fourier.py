@@ -82,7 +82,7 @@ for i in range(len(logw)):
 
 np.savetxt("data.txt", data)
 
-plt.plot(np.exp(logw), np.exp(logl - logl.max()), "o-")
+plt.plot(np.exp(logw), logl, "o-")
 plt.xlabel("Width")
 plt.ylabel("Error")
 plt.show()

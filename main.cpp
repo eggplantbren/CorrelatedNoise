@@ -1,4 +1,5 @@
 #include <armadillo>
+#include <iomanip>
 #include <iostream>
 #include <DNest4/code/RNG.h>
 #include "NoiseModel.h"
@@ -25,9 +26,9 @@ int main()
     m.from_prior(rng);
     logl = m.log_likelihood(data_fourier);
 
-    for(int i=0; i<100000; ++i)
+    for(int i=0; i<10000; ++i)
     {
-        auto m2 = m;
+        NoiseModel m2 = m;
         double logH = m2.perturb(rng);
         double logl2 = m2.log_likelihood(data_fourier);
         double logA = logH + logl2 - logl;
@@ -39,7 +40,7 @@ int main()
         }
 
         if((i+1)%100 == 0)
-            std::cout << (i+1) << ' ' << m << ' ' << logl << std::endl;
+            std::cout << std::setprecision(12) << (i+1) << ' ' << m << ' ' << logl << std::endl;
     }
 
     return 0;
