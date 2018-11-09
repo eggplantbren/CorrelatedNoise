@@ -17,9 +17,17 @@ NoiseModel::NoiseModel(int _ni, int _nj)
 
 void NoiseModel::from_prior(DNest4::RNG& rng)
 {
-    // Trivial flat priors
-    L = 100.0*rng.rand();
-    sigma = 100.0*rng.rand();
+    DNest4::Cauchy cauchy(0.0, 5.0);
+
+    // Fairly generic priors
+    do
+    {
+        sigma = cauchy.generate(rng);
+    }while(std::abs(sigma) >= 100.0);
+    sigma = exp(sigma);
+
+    // Log-uniform(0.1, sqrt(n))
+    L = exp(log(0.1) + log(10.0*sqrt(n))*rng.rand());
 
     compute_psf();
 }
@@ -68,18 +76,28 @@ double NoiseModel::perturb(DNest4::RNG& rng)
 {
     double logH = 0.0;
 
+    DNest4::Cauchy cauchy(0.0, 5.0);
     int which = rng.rand_int(2);
 
     if(which == 0)
     {
-        L += 100.0*rng.randh();
-        DNest4::wrap(L, 0.0, 100.0);
+        sigma = log(sigma);
+        logH += cauchy.perturb(sigma, rng);
+        if(std::abs(sigma) >= 100.0)
+        {
+            sigma = 1.0;
+            return -1E300;
+        }
+        sigma = exp(sigma);
     }
     else
     {
-        sigma += 100.0*rng.randh();
-        DNest4::wrap(sigma, 0.0, 100.0);
+        L = log(L);
+        L += log(10.0*sqrt(n))*rng.randh();
+        DNest4::wrap(L, log(0.1), log(sqrt(n)));
+        L = exp(L);
     }
+
     compute_psf();
 
     return logH;
