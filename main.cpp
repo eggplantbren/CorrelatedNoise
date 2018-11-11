@@ -20,17 +20,22 @@ int main()
     fin.close();
     arma::cx_mat data_fourier = arma::fft2(data)/sqrt(200*300);
 
+    arma::mat sigma_map(200, 300);
+    arma::mat model(200, 300);
+    sigma_map.zeros();
+    model.zeros();
+
     // Do some MCMC
     double logl;
     NoiseModel m(200, 300);
     m.from_prior(rng);
-    logl = m.log_likelihood(data_fourier);
+    logl = m.log_likelihood(data, model, sigma_map);
 
-    for(int i=0; i<10000; ++i)
+    for(int i=0; i<100000; ++i)
     {
         NoiseModel m2 = m;
         double logH = m2.perturb(rng);
-        double logl2 = m2.log_likelihood(data_fourier);
+        double logl2 = m2.log_likelihood(data, model, sigma_map);
         double logA = logH + logl2 - logl;
 
         if(rng.rand() <= exp(logA))

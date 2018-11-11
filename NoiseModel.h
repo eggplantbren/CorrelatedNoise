@@ -18,7 +18,10 @@ class NoiseModel
         int ni, nj, n;
 
         // Parameters
-        double sigma, L; // Coefficient and length scale
+        double coeff0; // Base sigma
+        double coeff1; // Coefficient in front of provided sigma map
+        double coeff2; // Coefficient in front of sqrt(abs(model image))
+        double L;      // Length scale
 
         // Fourier transform of the PSF
         arma::cx_mat fft_of_psf;
@@ -35,8 +38,14 @@ class NoiseModel
         // Perturb
         double perturb(DNest4::RNG& rng);
 
-        // Evaluate log likelihood
-        double log_likelihood(const arma::cx_mat& image_fft) const;
+        // Evaluate log likelihood (pass in FFT of standardised residuals)
+        // (Ignores coeff)
+        double log_likelihood_flat(const arma::cx_mat& image_fft) const;
+
+        // More complete log likelihood
+        double log_likelihood(const arma::mat& data,
+                              const arma::mat& model,
+                              const arma::mat& sigma_map) const;
 
         // Generate an image
         arma::vec generate_image(DNest4::RNG& rng) const;

@@ -22,9 +22,21 @@ void NoiseModel::from_prior(DNest4::RNG& rng)
     // Fairly generic priors
     do
     {
-        sigma = cauchy.generate(rng);
-    }while(std::abs(sigma) >= 100.0);
-    sigma = exp(sigma);
+        coeff0 = cauchy.generate(rng);
+    }while(std::abs(coeff0) >= 100.0);
+    coeff0 = exp(coeff0);
+
+    do
+    {
+        coeff1 = cauchy.generate(rng);
+    }while(std::abs(coeff1) >= 100.0);
+    coeff1 = exp(coeff1);
+
+    do
+    {
+        coeff2 = cauchy.generate(rng);
+    }while(std::abs(coeff2) >= 100.0);
+    coeff2 = exp(coeff2);
 
     // Log-uniform(0.1, sqrt(n))
     L = exp(log(0.1) + log(10.0*sqrt(n))*rng.rand());
@@ -54,7 +66,7 @@ void NoiseModel::compute_psf()
     for(int j=0; j<nj; ++j)
         for(int i=0; i<ni; ++i)
             tot_sq += pow(the_model(i, j), 2);
-    the_model = sigma*the_model/sqrt(tot_sq)*sqrt(ni*nj);
+    the_model = the_model/sqrt(tot_sq)*sqrt(ni*nj);
 
     // FFtshift
     arma::mat fft_shifted(ni, nj);
@@ -77,18 +89,40 @@ double NoiseModel::perturb(DNest4::RNG& rng)
     double logH = 0.0;
 
     DNest4::Cauchy cauchy(0.0, 5.0);
-    int which = rng.rand_int(2);
+    int which = rng.rand_int(4);
 
     if(which == 0)
     {
-        sigma = log(sigma);
-        logH += cauchy.perturb(sigma, rng);
-        if(std::abs(sigma) >= 100.0)
+        coeff0 = log(coeff0);
+        logH += cauchy.perturb(coeff0, rng);
+        if(std::abs(coeff0) >= 100.0)
         {
-            sigma = 1.0;
+            coeff0 = 1.0;
             return -1E300;
         }
-        sigma = exp(sigma);
+        coeff0 = exp(coeff0);
+    }
+    else if(which == 2)
+    {
+        coeff1 = log(coeff1);
+        logH += cauchy.perturb(coeff1, rng);
+        if(std::abs(coeff1) >= 100.0)
+        {
+            coeff1 = 1.0;
+            return -1E300;
+        }
+        coeff1 = exp(coeff1);
+    }
+    else if(which == 3)
+    {
+        coeff2 = log(coeff2);
+        logH += cauchy.perturb(coeff2, rng);
+        if(std::abs(coeff2) >= 100.0)
+        {
+            coeff2 = 1.0;
+            return -1E300;
+        }
+        coeff2 = exp(coeff2);
     }
     else
     {
@@ -96,14 +130,34 @@ double NoiseModel::perturb(DNest4::RNG& rng)
         L += log(10.0*sqrt(n))*rng.randh();
         DNest4::wrap(L, log(0.1), log(sqrt(n)));
         L = exp(L);
+        compute_psf();
     }
-
-    compute_psf();
 
     return logH;
 }
 
-double NoiseModel::log_likelihood(const arma::cx_mat& data_fft) const
+// More complete log likelihood
+double NoiseModel::log_likelihood(const arma::mat& data,
+                                  const arma::mat& model,
+                                  const arma::mat& sigma_map) const
+{
+    arma::mat sigma(ni, nj);
+    for(int j=0; j<nj; ++j)
+        for(int i=0; i<ni; ++i)
+            sigma(i, j) = sqrt(coeff0*coeff0 + coeff1*coeff1*sigma_map(i, j)
+                                               + coeff2*std::abs(model(i, j)));
+
+    arma::mat normalised_residuals = (data - model)/sigma;
+    arma::cx_mat resid_fft = arma::fft2(normalised_residuals)/sqrt(ni*nj);
+    double extra_normalisation = 0.0;
+    for(int j=0; j<nj; ++j)
+        for(int i=0; i<ni; ++i)
+            extra_normalisation += -log(sigma(i, j));
+
+    return log_likelihood_flat(resid_fft) + extra_normalisation;
+}
+
+double NoiseModel::log_likelihood_flat(const arma::cx_mat& data_fft) const
 {
     double logL = -0.5*log(2.0*M_PI)*ni*nj;
 
@@ -118,25 +172,17 @@ double NoiseModel::log_likelihood(const arma::cx_mat& data_fft) const
         }
     }
 
-//    for(int i=0; i<ni; ++i)
-//    {
-//        for(int j=0; j<nj; ++j)
-//            std::cout << the_model(i, j) << ' ';
-//        std::cout << std::endl;
-//    }
-//    exit(0); 
-
     return logL;
 }
 
 void NoiseModel::print(std::ostream& out) const
 {
-    out << sigma << ' ' << L;
+    out << coeff0 << ' ' << coeff1 << ' ' << coeff2 << ' ' << L;
 }
 
 std::string NoiseModel::description()
 {
-    return "sigma, L";
+    return "coeff0, coeff1, coeff2, L, ";
 }
 
 std::ostream& operator << (std::ostream& out, const NoiseModel& m)
