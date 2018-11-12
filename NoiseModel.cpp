@@ -144,7 +144,7 @@ double NoiseModel::log_likelihood(const arma::mat& data,
     arma::mat sigma(ni, nj);
     for(int j=0; j<nj; ++j)
         for(int i=0; i<ni; ++i)
-            sigma(i, j) = sqrt(coeff0*coeff0 + coeff1*coeff1*sigma_map(i, j)
+            sigma(i, j) = sqrt(coeff0*coeff0 + pow(coeff1*sigma_map(i, j), 2)
                                                + coeff2*std::abs(model(i, j)));
 
     arma::mat normalised_residuals = (data - model)/sigma;
