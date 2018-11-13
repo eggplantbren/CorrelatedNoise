@@ -44,8 +44,8 @@ ii, jj = make_grid()
 
 @jit
 def make_psf(width):
-    blur = np.exp(-0.5*(ii - ni/2)**2/width**2 - 0.5*(jj - nj/2)**2/width**2)
-    blur[ni//2, nj//2] += 1E-3
+    rsq = (ii - ni/2)**2 + (jj - nj/2)**2
+    blur = 1.0 / (1.0 + rsq/width**2)**2
     blur = blur/np.sqrt(np.sum(blur**2))*np.sqrt(blur.size)
     return blur
 

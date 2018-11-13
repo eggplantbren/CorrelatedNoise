@@ -56,10 +56,9 @@ void NoiseModel::compute_psf()
         for(int i=0; i<ni; ++i)
         {
             rsq = (i - ni/2)*(i - ni/2) + (j - nj/2)*(j - nj/2);
-            the_model(i, j) = exp(-0.5*rsq*inv_L_squared);
+            the_model(i, j) = 1.0 / pow(1.0 + rsq*inv_L_squared, 2);
         }
     }
-    the_model(ni/2, nj/2) += 1E-3;
 
     // Normalise the PSF
     double tot_sq = 0.0;
