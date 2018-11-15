@@ -1,9 +1,9 @@
 #ifndef CorrelatedNoise_NoiseModel_h
 #define CorrelatedNoise_NoiseModel_h
 
-#include <DNest4/code/RNG.h>
-#include <armadillo>
 #include <ostream>
+#include <DNest4/code/RNG.h>
+#include <Eigen/Dense>
 
 namespace CorrelatedNoise
 {
@@ -15,7 +15,7 @@ class NoiseModel
     private:
 
         // Image dimensions
-        int ni, nj, n;
+        int ny, nx, n;
 
         // Parameters
         double coeff0; // Base sigma
@@ -23,14 +23,13 @@ class NoiseModel
         double coeff2; // Coefficient in front of sqrt(abs(model image))
         double L;      // Length scale
 
-        // Fourier transform of the PSF
-        arma::cx_mat fft_of_psf;
-        void compute_psf();
+        // Kronecker factors
+        Eigen::MatrixXd Cy, Cx;
 
     public:
 
         // Constructor. Provide image dimensions.
-        NoiseModel(int _ni, int _nj);
+        NoiseModel(int _ny, int _nx);
 
         // Generate from prior
         void from_prior(DNest4::RNG& rng);
@@ -38,17 +37,10 @@ class NoiseModel
         // Perturb
         double perturb(DNest4::RNG& rng);
 
-        // Evaluate log likelihood (pass in FFT of standardised residuals)
-        // (Ignores coeff)
-        double log_likelihood_flat(const arma::cx_mat& image_fft) const;
-
         // More complete log likelihood
-        double log_likelihood(const arma::mat& data,
-                              const arma::mat& model,
-                              const arma::mat& sigma_map) const;
-
-        // Generate an image
-        arma::vec generate_image(DNest4::RNG& rng) const;
+        double log_likelihood(const Eigen::MatrixXd& data,
+                              const Eigen::MatrixXd& model,
+                              const Eigen::MatrixXd& sigma_map) const;
 
         // Print to stream
         void print(std::ostream& out) const;
