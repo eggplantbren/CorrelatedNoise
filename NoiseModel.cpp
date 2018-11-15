@@ -150,7 +150,39 @@ double NoiseModel::log_likelihood(const Eigen::MatrixXd& data,
                                   const Eigen::MatrixXd& model,
                                   const Eigen::MatrixXd& sigma_map) const
 {
-    return 0.0;
+    // All eigenvalues of C
+    Eigen::VectorXd E = kron(Ey, Ex);
+
+    // Flatten data
+    Eigen::VectorXd ys(n);
+    int k = 0;
+    for(int i=0; i<ny; ++i)
+        for(int j=0; j<nx; ++j)
+            ys(k++) = data(i, j);
+
+    // Dot product of the data against eigenvectors of C
+    // i.e., the data represented in that basis
+    Eigen::VectorXd coeffs(n);
+    k = 0;
+    for(int i=0; i<ny; ++i)
+    {
+        for(int j=0; j<nx; ++j)
+        {
+            Eigen::VectorXd V = kron(Vy.col(i), Vx.col(j));
+            coeffs[k++] = V.dot(ys);
+        }
+    }
+
+    double log_det = 0.0;
+    for(int i=0; i<n; ++i)
+        log_det += log(E(i));
+
+    Eigen::VectorXd solved = (coeffs.array()/E.array()).matrix();
+    double dot_prod = coeffs.dot(solved);
+
+    double logL = -n*0.5*log(2*M_PI) - 0.5*log_det - 0.5*dot_prod;
+
+    return logL;
 }
 
 void NoiseModel::print(std::ostream& out) const
@@ -168,6 +200,20 @@ std::ostream& operator << (std::ostream& out, const NoiseModel& m)
     m.print(out);
     return out;
 }
+
+Eigen::VectorXd kron(const Eigen::VectorXd& x, const Eigen::VectorXd& y)
+{
+    Eigen::VectorXd result(x.size()*y.size());
+    int k = 0;
+    for(int j=0; j<x.size(); ++j)
+        for(int i=0; i<y.size(); ++i)
+        {
+            result(k) = x(j)*y(i);
+            ++k;
+        }
+    return result;
+}
+
 
 } // namespace CorrelatedNoise
 

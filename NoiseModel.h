@@ -55,6 +55,9 @@ class NoiseModel
         static std::string description();
 };
 
+// Kronecker product of two vectors
+Eigen::VectorXd kron(const Eigen::VectorXd& x, const Eigen::VectorXd& y);
+
 std::ostream& operator << (std::ostream& out, const NoiseModel& m);
 
 

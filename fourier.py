@@ -8,7 +8,7 @@ import scipy.linalg
 rng.seed(0)
 
 # Image dimensions
-ni, nj = 200, 300
+ni, nj = 100, 101
 
 @jit
 def make_grid():
