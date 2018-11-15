@@ -96,6 +96,7 @@ double NoiseModel::perturb(DNest4::RNG& rng)
     double logH = 0.0;
 
     DNest4::Cauchy cauchy(0.0, 5.0);
+
     int which = rng.rand_int(4);
 
     if(which == 0)
@@ -109,7 +110,7 @@ double NoiseModel::perturb(DNest4::RNG& rng)
         }
         coeff0 = exp(coeff0);
     }
-    else if(which == 2)
+    else if(which == 1)
     {
         coeff1 = log(coeff1);
         logH += cauchy.perturb(coeff1, rng);
@@ -120,7 +121,7 @@ double NoiseModel::perturb(DNest4::RNG& rng)
         }
         coeff1 = exp(coeff1);
     }
-    else if(which == 3)
+    else if(which == 2)
     {
         coeff2 = log(coeff2);
         logH += cauchy.perturb(coeff2, rng);
@@ -156,9 +157,18 @@ double NoiseModel::log_likelihood(const Eigen::MatrixXd& data,
     // Flatten data
     Eigen::VectorXd ys(n);
     int k = 0;
+    double extra_log_determinant = 0.0;
+    double sd;
     for(int i=0; i<ny; ++i)
+    {
         for(int j=0; j<nx; ++j)
-            ys(k++) = data(i, j);
+        {
+            sd = sqrt(coeff0*coeff0 + pow(sigma_map(i, j), 2)
+                                    + coeff1*std::abs(model(i, j)));
+            ys(k++) = (data(i, j) - model(i, j))/sd;
+            extra_log_determinant += 2*log(sd);
+        }
+    }
 
     // Dot product of the data against eigenvectors of C
     // i.e., the data represented in that basis
@@ -173,7 +183,7 @@ double NoiseModel::log_likelihood(const Eigen::MatrixXd& data,
         }
     }
 
-    double log_det = 0.0;
+    double log_det = extra_log_determinant;
     for(int i=0; i<n; ++i)
         log_det += log(E(i));
 

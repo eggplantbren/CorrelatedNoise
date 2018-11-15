@@ -45,7 +45,7 @@ ii, jj = make_grid()
 @jit
 def make_psf(width):
     rsq = (ii - ni/2)**2 + (jj - nj/2)**2
-    blur = 1.0 / (1.0 + rsq/width**2)**2
+    blur = np.exp(-rsq/width**2) #1.0 / (1.0 + rsq/width**2)**2
     blur = blur/np.sqrt(np.sum(blur**2))*np.sqrt(blur.size)
     return blur
 
@@ -65,13 +65,13 @@ ns_fourier = unitary_fft2(ns)
 #print(np.sum(ns**2))
 
 # A kernel to blur the noise with to produce some data
-psf = make_psf(5.0)
+psf = make_psf(1.3)
 psf = np.fft.fftshift(psf)
 psf_fourier = unitary_fft2(psf)
 
 # Create the data
 data_fourier = ns_fourier*psf_fourier
-data = unitary_ifft2(data_fourier).real
+data = 5.7*unitary_ifft2(data_fourier).real
 
 # Compare fourier/non-fourier calcs for independent data
 #print(log_likelihood(1E-4, data_fourier))
