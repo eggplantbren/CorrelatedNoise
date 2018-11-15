@@ -16,6 +16,51 @@ NoiseModel::NoiseModel(int _ny, int _nx)
 
 }
 
+void NoiseModel::compute_Cx()
+{
+    double inv_L2 = 1.0/(L*L);
+
+    // Loop in column-major order
+    for(int j=0; j<nx; ++j)
+    {
+        for(int i=j; i<nx; ++i)
+        {
+            Cx(i, j) = exp(-0.5*pow(i - j, 2)*inv_L2);
+            if(i != j)
+                Cx(j, i) = Cx(i, j);
+        }
+        Cx(j, j) += 1.0E-6;  // For numerical stability
+    }
+
+    // https://eigen.tuxfamily.org/dox/group__TutorialLinearAlgebra.html#title2
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(Cx);
+    Ex = eigensolver.eigenvalues();
+    Vx = eigensolver.eigenvectors();
+}
+
+
+void NoiseModel::compute_Cy()
+{
+    double inv_L2 = 1.0/(L*L);
+
+    // Loop in column-major order
+    for(int j=0; j<ny; ++j)
+    {
+        for(int i=j; i<ny; ++i)
+        {
+            Cy(i, j) = exp(-0.5*pow(i - j, 2)*inv_L2);
+            if(i != j)
+                Cy(j, i) = Cy(i, j);
+        }
+        Cy(j, j) += 1.0E-6;  // For numerical stability
+    }
+
+    // https://eigen.tuxfamily.org/dox/group__TutorialLinearAlgebra.html#title2
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(Cy);
+    Ey = eigensolver.eigenvalues();
+    Vy = eigensolver.eigenvectors();
+}
+
 void NoiseModel::from_prior(DNest4::RNG& rng)
 {
     DNest4::Cauchy cauchy(0.0, 5.0);
@@ -42,6 +87,8 @@ void NoiseModel::from_prior(DNest4::RNG& rng)
     // Log-uniform(0.1, sqrt(n))
     L = exp(log(0.1) + log(10.0*sqrt(n))*rng.rand());
 
+    compute_Cx();
+    compute_Cy();
 }
 
 double NoiseModel::perturb(DNest4::RNG& rng)
@@ -90,6 +137,9 @@ double NoiseModel::perturb(DNest4::RNG& rng)
         L += log(10.0*sqrt(n))*rng.randh();
         DNest4::wrap(L, log(0.1), log(sqrt(n)));
         L = exp(L);
+
+        compute_Cx();
+        compute_Cy();
     }
 
     return logH;

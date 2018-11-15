@@ -23,8 +23,14 @@ class NoiseModel
         double coeff2; // Coefficient in front of sqrt(abs(model image))
         double L;      // Length scale
 
-        // Kronecker factors
+        // Kronecker factors and their eigenvalues/vectors
         Eigen::MatrixXd Cy, Cx;
+        Eigen::VectorXd Ey, Ex;
+        Eigen::MatrixXd Vy, Vx;
+
+        // Compute the above matrices
+        void compute_Cy();
+        void compute_Cx();
 
     public:
 
