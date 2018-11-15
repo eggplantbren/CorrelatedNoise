@@ -66,7 +66,7 @@ for i in range(ny):
         coeffs[k] = np.dot(ys, V)
         k += 1
 
-logl2 = -n*0.5*np.log(2*np.pi) - 0.5*np.sum(np.log(np.kron(Ex, Ey))) \
+logl2 = -n*0.5*np.log(2*np.pi) - 0.5*np.sum(np.log(E)) \
                 - 0.5*np.dot(coeffs, coeffs/E)
 
 # Eigendecomposition: C = V @ diag(E) @ V.T since C is symmetric V.T = Vinv
