@@ -152,7 +152,8 @@ double NoiseModel::log_likelihood(const Eigen::MatrixXd& data,
                                   const Eigen::MatrixXd& sigma_map) const
 {
     // All eigenvalues of C
-    Eigen::MatrixXd E = kron(Ey, Ex);
+    Eigen::MatrixXd Emat = outer(Ey, Ex);
+    Eigen::Map<Eigen::VectorXd> E(Emat.data(), n);
 
     // Flatten data
     Eigen::VectorXd ys(n);
@@ -178,8 +179,8 @@ double NoiseModel::log_likelihood(const Eigen::MatrixXd& data,
     {
         for(int j=0; j<nx; ++j)
         {
-//            Eigen::VectorXd V = ;
-            coeffs[k++] = ys.dot(kron(Vy.col(i), Vx.col(j)));
+            Eigen::MatrixXd V = outer(Vy.col(i), Vx.col(j));
+            coeffs[k++] = ys.dot(Eigen::Map<Eigen::VectorXd>(V.data(), n));
         }
     }
 
@@ -211,24 +212,9 @@ std::ostream& operator << (std::ostream& out, const NoiseModel& m)
     return out;
 }
 
-Eigen::Map<Eigen::VectorXd> kron(const Eigen::VectorXd& x, const Eigen::VectorXd& y)
+Eigen::MatrixXd outer(const Eigen::VectorXd& x, const Eigen::VectorXd& y)
 {
-
-//    int k = 0;
-//    for(int j=0; j<mat.cols(); ++j)
-//        for(int i=0; i<mat.rows(); ++i)
-//            result[k++] = mat(i, j);
-
-//    int k = 0;
-//    for(int j=0; j<x.size(); ++j)
-//        for(int i=0; i<y.size(); ++i)
-//        {
-//            result(k) = x(j)*y(i);
-//            ++k;
-//        }
-
-    Eigen::MatrixXd mat = y * x.transpose();
-    return Eigen::Map<Eigen::VectorXd>(mat.data(), x.size()*y.size());
+    return y * x.transpose();
 }
 
 
