@@ -135,9 +135,9 @@ double NoiseModel::perturb(DNest4::RNG& rng)
     else
     {
         L = log(L);
-        L -= -0.5*pow(L, 2);
+        logH -= -0.5*pow(L, 2);
         L += rng.randh();
-        L += -0.5*pow(L, 2);
+        logH += -0.5*pow(L, 2);
         L = exp(L);
 
         compute_Cx();
