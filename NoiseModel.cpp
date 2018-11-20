@@ -84,8 +84,8 @@ void NoiseModel::from_prior(DNest4::RNG& rng)
     }while(std::abs(coeff2) >= 100.0);
     coeff2 = exp(coeff2);
 
-    // Log-normal(median=1, sd_ln=1)
-    L = exp(rng.randn());
+    // Log-uniform(0.1, 0.1*pixels)
+    L = exp(log(0.1) + 0.5*log(n)*rng.rand());
 
     compute_Cx();
     compute_Cy();
@@ -135,9 +135,8 @@ double NoiseModel::perturb(DNest4::RNG& rng)
     else
     {
         L = log(L);
-        logH -= -0.5*pow(L, 2);
-        L += rng.randh();
-        logH += -0.5*pow(L, 2);
+        L += 0.5*log(n)*rng.randh();
+        DNest4::wrap(L, log(0.1), log(0.1*sqrt(n)));
         L = exp(L);
 
         compute_Cx();
