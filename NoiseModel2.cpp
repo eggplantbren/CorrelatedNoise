@@ -114,32 +114,34 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
 
     double logL = -0.5*extra_log_determinant;
 
-    int k1, k2;
+    int k2;
+    Eigen::VectorXd zs = ys;
+    k = 0;
     for(int i=0; i<ny; ++i)
     {
         for(int j=0; j<nx; ++j)
         {
-            // Diagonal term
-            k1 = j + i*nx;
-            logL += -0.5*pow(ys(k1), 2);
 
             // Pixel to the right
             if(j < nx - 1)
             {
                 k2 = (j+1) + i*nx;
-                logL += 0.5*alpha*ys(k1)*ys(k2);
+                zs(k) += -alpha*ys(k2);
             }
 
             // Pixel down
             if(i < ny - 1)
             {
                 k2 = j + (i+1)*nx;
-                logL += 0.5*alpha*ys(k1)*ys(k2);
+                zs(k) += -alpha*ys(k2);
             }
 
+            ++k;
         }
     }
 
+    for(k=0; k<n; ++k)
+        logL += -0.5*zs(k)*zs(k);
 
     return logL;
 }
