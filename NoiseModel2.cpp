@@ -2,6 +2,7 @@
 #include <iostream>
 #include <DNest4/code/Distributions/Cauchy.h>
 #include <DNest4/code/Utils.h>
+#include <Eigen/Sparse>
 
 namespace CorrelatedNoise
 {
@@ -112,36 +113,71 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
         }
     }
 
-    double logL = -0.5*n*sqrt(2.0*M_PI)-0.5*extra_log_determinant;
+    double logL = -0.5*n*sqrt(2.0*M_PI) - 0.5*extra_log_determinant;
 
-    int k2;
-    Eigen::VectorXd zs = ys;
-    k = 0;
+    std::vector<Eigen::Triplet<double>> triplets;\
+    int k1, k2;
     for(int i=0; i<ny; ++i)
     {
         for(int j=0; j<nx; ++j)
         {
+            // Here
+            k1 = j + i*nx;
+            triplets.emplace_back(k1, k1, 1.0);
 
-            // Pixel to the right
-            if(j < nx - 1)
+            // Pixel up
+            if(i > 0)
             {
-                k2 = (j+1) + i*nx;
-                zs(k) += -alpha*ys(k2);
+                k2 = j + (i-1)*nx;
+//                std::cout << k1 << ' ' << k2 << std::endl;
+                triplets.emplace_back(k1, k2, -alpha);
             }
 
             // Pixel down
             if(i < ny - 1)
             {
                 k2 = j + (i+1)*nx;
-                zs(k) += -alpha*ys(k2);
+//                std::cout << k1 << ' ' << k2 << std::endl;
+                triplets.emplace_back(k1, k2, -alpha);
             }
 
-            ++k;
+            // Pixel left
+            if(j > 0)
+            {
+                k2 = (j-1) + i*nx;
+//                std::cout << k1 << ' ' << k2 << std::endl;
+                triplets.emplace_back(k1, k2, -alpha);
+            }
+
+            // Pixel right
+            if(j < nx - 1)
+            {
+                k2 = (j+1) + i*nx;
+//                std::cout << k1 << ' ' << k2 << std::endl;
+                triplets.emplace_back(k1, k2, -alpha);
+            }
+
         }
     }
 
+    // Make the sparse matrix
+    Eigen::SparseMatrix<double> sparse_mat(n, n);
+    sparse_mat.setFromTriplets(triplets.begin(), triplets.end());
+
+    // Term in the exponential
+    Eigen::VectorXd zs = sparse_mat * ys;
     for(k=0; k<n; ++k)
         logL += -0.5*zs(k)*zs(k);
+
+    // Use Cholesky for log determinant
+    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> cholesky;
+    cholesky.compute(sparse_mat);
+    Eigen::SparseMatrix<double> L = cholesky.matrixL();
+
+    double log_det = 0.0;
+    for(int i=0; i<n; ++i)
+        log_det += 2.0*log(L.coeffRef(i, i)); // TODO: Find a faster way?
+    logL += -0.5*log_det;
 
     return logL;
 }
