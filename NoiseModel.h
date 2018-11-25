@@ -55,9 +55,8 @@ class NoiseModel
         static std::string description();
 };
 
-// Kronecker product of two vectors
-Eigen::Map<Eigen::VectorXd> kron
-            (const Eigen::VectorXd& x, const Eigen::VectorXd& y);
+// Outer product of two vectors
+Eigen::MatrixXd outer(const Eigen::VectorXd& x, const Eigen::VectorXd& y);
 
 std::ostream& operator << (std::ostream& out, const NoiseModel& m);
 

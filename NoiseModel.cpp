@@ -84,8 +84,8 @@ void NoiseModel::from_prior(DNest4::RNG& rng)
     }while(std::abs(coeff2) >= 100.0);
     coeff2 = exp(coeff2);
 
-    // Log-uniform(0.1, sqrt(n))
-    L = exp(log(0.1) + log(10.0*sqrt(n))*rng.rand());
+    // Log-uniform(0.1, 0.1*pixels)
+    L = exp(log(0.1) + 0.5*log(n)*rng.rand());
 
     compute_Cx();
     compute_Cy();
@@ -135,8 +135,8 @@ double NoiseModel::perturb(DNest4::RNG& rng)
     else
     {
         L = log(L);
-        L += log(10.0*sqrt(n))*rng.randh();
-        DNest4::wrap(L, log(0.1), log(sqrt(n)));
+        L += 0.5*log(n)*rng.randh();
+        DNest4::wrap(L, log(0.1), log(0.1*sqrt(n)));
         L = exp(L);
 
         compute_Cx();
@@ -152,7 +152,8 @@ double NoiseModel::log_likelihood(const Eigen::MatrixXd& data,
                                   const Eigen::MatrixXd& sigma_map) const
 {
     // All eigenvalues of C
-    Eigen::MatrixXd E = kron(Ey, Ex);
+    Eigen::MatrixXd Emat = outer(Ey, Ex);
+    Eigen::Map<Eigen::VectorXd> E(Emat.data(), n);
 
     // Flatten data
     Eigen::VectorXd ys(n);
@@ -178,8 +179,8 @@ double NoiseModel::log_likelihood(const Eigen::MatrixXd& data,
     {
         for(int j=0; j<nx; ++j)
         {
-//            Eigen::VectorXd V = ;
-            coeffs[k++] = ys.dot(kron(Vy.col(i), Vx.col(j)));
+            Eigen::MatrixXd V = outer(Vy.col(i), Vx.col(j));
+            coeffs[k++] = ys.dot(Eigen::Map<Eigen::VectorXd>(V.data(), n));
         }
     }
 
@@ -211,24 +212,9 @@ std::ostream& operator << (std::ostream& out, const NoiseModel& m)
     return out;
 }
 
-Eigen::Map<Eigen::VectorXd> kron(const Eigen::VectorXd& x, const Eigen::VectorXd& y)
+Eigen::MatrixXd outer(const Eigen::VectorXd& x, const Eigen::VectorXd& y)
 {
-
-//    int k = 0;
-//    for(int j=0; j<mat.cols(); ++j)
-//        for(int i=0; i<mat.rows(); ++i)
-//            result[k++] = mat(i, j);
-
-//    int k = 0;
-//    for(int j=0; j<x.size(); ++j)
-//        for(int i=0; i<y.size(); ++i)
-//        {
-//            result(k) = x(j)*y(i);
-//            ++k;
-//        }
-
-    Eigen::MatrixXd mat = y * x.transpose();
-    return Eigen::Map<Eigen::VectorXd>(mat.data(), x.size()*y.size());
+    return y * x.transpose();
 }
 
 
