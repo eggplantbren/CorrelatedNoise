@@ -93,10 +93,55 @@ double NoiseModel2::perturb(DNest4::RNG& rng)
 
 // More complete log likelihood
 double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
-                                  const Eigen::MatrixXd& model,
-                                  const Eigen::MatrixXd& sigma_map) const
+                                   const Eigen::MatrixXd& model,
+                                   const Eigen::MatrixXd& sigma_map) const
 {
-    return 0.0;
+    // Flatten data and turn it into standardised residuals
+    Eigen::VectorXd ys(n);
+    int k = 0;
+    double extra_log_determinant = 0.0;
+    double sd;
+    for(int i=0; i<ny; ++i)
+    {
+        for(int j=0; j<nx; ++j)
+        {
+            sd = sqrt(coeff0*coeff0 + pow(sigma_map(i, j), 2)
+                                    + coeff1*std::abs(model(i, j)));
+            ys(k++) = (data(i, j) - model(i, j))/sd;
+            extra_log_determinant += 2*log(sd);
+        }
+    }
+
+    double logL = -0.5*extra_log_determinant;
+
+    int k1, k2;
+    for(int i=0; i<ny; ++i)
+    {
+        for(int j=0; j<nx; ++j)
+        {
+            // Diagonal term
+            k1 = j + i*nx;
+            logL += -0.5*pow(ys(k1), 2);
+
+            // Pixel to the right
+            if(j < nx - 1)
+            {
+                k2 = (j+1) + i*nx;
+                logL += 0.5*alpha*ys(k1)*ys(k2);
+            }
+
+            // Pixel down
+            if(i < ny - 1)
+            {
+                k2 = j + (i+1)*nx;
+                logL += 0.5*alpha*ys(k1)*ys(k2);
+            }
+
+        }
+    }
+
+
+    return logL;
 }
 
 void NoiseModel2::print(std::ostream& out) const
