@@ -174,9 +174,10 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
     ldlt.compute(sparse_mat);
     Eigen::VectorXd D = ldlt.vectorD();
 
+    // log det of C, not of anything else!!!
     double log_det = 0.0;
     for(int i=0; i<n; ++i)
-        log_det += log(D(i));
+        log_det += -2.0*log(D(i));
     logL += -0.5*log_det;
 
     if(std::isnan(logL) || std::isinf(logL))
