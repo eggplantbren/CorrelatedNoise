@@ -115,7 +115,7 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
 
     double logL = -0.5*n*sqrt(2.0*M_PI) - 0.5*extra_log_determinant;
 
-    std::vector<Eigen::Triplet<double>> triplets;\
+    std::vector<Eigen::Triplet<double>> triplets;
     int k1, k2;
     for(int i=0; i<ny; ++i)
     {
@@ -169,15 +169,18 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
     for(k=0; k<n; ++k)
         logL += -0.5*zs(k)*zs(k);
 
-    // Use Cholesky for log determinant
-    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> cholesky;
-    cholesky.compute(sparse_mat);
-    Eigen::SparseMatrix<double> L = cholesky.matrixL();
+    // Use LDLT for log determinant
+    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> ldlt;
+    ldlt.compute(sparse_mat);
+    Eigen::VectorXd D = ldlt.vectorD();
 
     double log_det = 0.0;
     for(int i=0; i<n; ++i)
-        log_det += 2.0*log(L.coeffRef(i, i)); // TODO: Find a faster way?
+        log_det += log(D(i));
     logL += -0.5*log_det;
+
+    if(std::isnan(logL) || std::isinf(logL))
+        logL = -1E300;
 
     return logL;
 }
