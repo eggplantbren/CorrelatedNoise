@@ -39,7 +39,7 @@ void NoiseModel2::from_prior(DNest4::RNG& rng)
     }while(std::abs(coeff2) >= 100.0);
     coeff2 = exp(coeff2);
 
-    alpha = rng.rand();
+    alpha = 0.25*rng.rand();
 }
 
 double NoiseModel2::perturb(DNest4::RNG& rng)
@@ -85,8 +85,8 @@ double NoiseModel2::perturb(DNest4::RNG& rng)
     }
     else
     {
-        alpha += rng.randh();
-        DNest4::wrap(alpha, 0.0, 1.0);
+        alpha += 0.25*rng.randh();
+        DNest4::wrap(alpha, 0.0, 0.25);
     }
 
     return logH;
