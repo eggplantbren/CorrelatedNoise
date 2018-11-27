@@ -113,7 +113,7 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
         }
     }
 
-    double logL = -0.5*n*sqrt(2.0*M_PI) - 0.5*extra_log_determinant;
+    double logL = -0.5*n*log(2.0*M_PI) - 0.5*extra_log_determinant;
 
     std::vector<Eigen::Triplet<double>> triplets;
     int k1, k2;
