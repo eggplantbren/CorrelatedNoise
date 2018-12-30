@@ -33,12 +33,6 @@ void NoiseModel2::from_prior(DNest4::RNG& rng)
     }while(std::abs(coeff1) >= 100.0);
     coeff1 = exp(coeff1);
 
-    do
-    {
-        coeff2 = cauchy.generate(rng);
-    }while(std::abs(coeff2) >= 100.0);
-    coeff2 = exp(coeff2);
-
     alpha = 0.25*rng.rand();
 }
 
@@ -48,7 +42,7 @@ double NoiseModel2::perturb(DNest4::RNG& rng)
 
     DNest4::Cauchy cauchy(0.0, 5.0);
 
-    int which = rng.rand_int(4);
+    int which = rng.rand_int(3);
 
     if(which == 0)
     {
@@ -71,17 +65,6 @@ double NoiseModel2::perturb(DNest4::RNG& rng)
             return -1E300;
         }
         coeff1 = exp(coeff1);
-    }
-    else if(which == 2)
-    {
-        coeff2 = log(coeff2);
-        logH += cauchy.perturb(coeff2, rng);
-        if(std::abs(coeff2) >= 100.0)
-        {
-            coeff2 = 1.0;
-            return -1E300;
-        }
-        coeff2 = exp(coeff2);
     }
     else
     {
@@ -106,8 +89,8 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
     {
         for(int j=0; j<nx; ++j)
         {
-            sd = sqrt(coeff0*coeff0 + pow(sigma_map(i, j), 2)
-                                    + coeff1*std::abs(model(i, j)));
+            sd = sqrt(coeff0*coeff0 + coeff1*std::abs(model(i, j))
+                                    + pow(sigma_map(i, j), 2));
             ys(k++) = (data(i, j) - model(i, j))/sd;
             extra_log_determinant += 2*log(sd);
         }
@@ -188,12 +171,12 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
 
 void NoiseModel2::print(std::ostream& out) const
 {
-    out << coeff0 << ' ' << coeff1 << ' ' << coeff2 << ' ' << alpha;
+    out << coeff0 << ' ' << coeff1 << ' ' << alpha;
 }
 
 std::string NoiseModel2::description()
 {
-    return "coeff0, coeff1, coeff2, alpha, ";
+    return "coeff0, coeff1, alpha, ";
 }
 
 std::ostream& operator << (std::ostream& out, const NoiseModel2& m)
