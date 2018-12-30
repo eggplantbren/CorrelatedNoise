@@ -4,11 +4,11 @@ import numpy as np
 import numpy.random as rng
 
 # Domain size
-nx, ny = 30, 30
+nx, ny = 100, 101
 n = nx*ny
 
 # Parameter
-alpha = 0.1
+alpha = 0.2
 
 @numba.jit
 def scalar(image):
@@ -62,7 +62,7 @@ def matrix(image):
 
 
 ## Initial conditions
-image = np.zeros((nx, ny))
+image = 0*rng.randn(nx, ny)
 f = scalar(image)
 
 #print(np.log(np.linalg.det(matrix(image))))
@@ -70,7 +70,7 @@ f = scalar(image)
 #print(matrix(image))
 #plt.show()
 
-for i in range(100000):
+for i in range(10000000):
     proposal = image.copy()
     x, y = rng.randint(nx), rng.randint(ny)
     proposal[x, y] += np.exp(3.0*rng.randn())*rng.randn()
@@ -82,8 +82,9 @@ for i in range(100000):
 
     if (i+1) % 10000 == 0:
         print(i+1, f, image.std())
-        plt.imshow(image, origin="lower")
-        plt.show()
 
-np.savetxt("data2.txt", image)
+np.savetxt("data.txt", 5.0*image)
+plt.imshow(image, origin="lower")
+plt.show()
+
 
