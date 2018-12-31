@@ -20,7 +20,6 @@ class NoiseModel
         // Parameters
         double coeff0; // Base sigma
         double coeff1; // Coefficient in front of provided sigma map
-        double coeff2; // Coefficient in front of sqrt(abs(model image))
         double L;      // Length scale
 
         // Kronecker factors and their eigenvalues/vectors

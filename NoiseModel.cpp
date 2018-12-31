@@ -78,12 +78,6 @@ void NoiseModel::from_prior(DNest4::RNG& rng)
     }while(std::abs(coeff1) >= 100.0);
     coeff1 = exp(coeff1);
 
-    do
-    {
-        coeff2 = cauchy.generate(rng);
-    }while(std::abs(coeff2) >= 100.0);
-    coeff2 = exp(coeff2);
-
     // Log-uniform(0.1, 0.1*pixels)
     L = exp(log(0.1) + 0.5*log(n)*rng.rand());
 
@@ -97,7 +91,7 @@ double NoiseModel::perturb(DNest4::RNG& rng)
 
     DNest4::Cauchy cauchy(0.0, 5.0);
 
-    int which = rng.rand_int(4);
+    int which = rng.rand_int(3);
 
     if(which == 0)
     {
@@ -121,17 +115,6 @@ double NoiseModel::perturb(DNest4::RNG& rng)
         }
         coeff1 = exp(coeff1);
     }
-    else if(which == 2)
-    {
-        coeff2 = log(coeff2);
-        logH += cauchy.perturb(coeff2, rng);
-        if(std::abs(coeff2) >= 100.0)
-        {
-            coeff2 = 1.0;
-            return -1E300;
-        }
-        coeff2 = exp(coeff2);
-    }
     else
     {
         L = log(L);
@@ -151,6 +134,13 @@ double NoiseModel::log_likelihood(const Eigen::MatrixXd& data,
                                   const Eigen::MatrixXd& model,
                                   const Eigen::MatrixXd& sigma_map) const
 {
+    // Find min of model
+    double min = 1E300;
+    for(int i=0; i<ny; ++i)
+        for(int j=0; j<nx; ++j)
+            if(model(i, j) < min)
+                min = model(i, j);
+
     // All eigenvalues of C
     Eigen::MatrixXd Emat = outer(Ey, Ex);
     Eigen::Map<Eigen::VectorXd> E(Emat.data(), n);
@@ -164,8 +154,8 @@ double NoiseModel::log_likelihood(const Eigen::MatrixXd& data,
     {
         for(int j=0; j<nx; ++j)
         {
-            sd = sqrt(coeff0*coeff0 + pow(sigma_map(i, j), 2)
-                                    + coeff1*std::abs(model(i, j)));
+            sd = sqrt(coeff0*coeff0 + coeff1*(model(i, j) - min)
+                                    + pow(sigma_map(i, j), 2));
             ys(k++) = (data(i, j) - model(i, j))/sd;
             extra_log_determinant += 2*log(sd);
         }
@@ -198,12 +188,12 @@ double NoiseModel::log_likelihood(const Eigen::MatrixXd& data,
 
 void NoiseModel::print(std::ostream& out) const
 {
-    out << coeff0 << ' ' << coeff1 << ' ' << coeff2 << ' ' << L;
+    out << coeff0 << ' ' << coeff1 << ' ' << L;
 }
 
 std::string NoiseModel::description()
 {
-    return "coeff0, coeff1, coeff2, L, ";
+    return "coeff0, coeff1, L, ";
 }
 
 std::ostream& operator << (std::ostream& out, const NoiseModel& m)
