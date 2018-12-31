@@ -80,6 +80,13 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
                                    const Eigen::MatrixXd& model,
                                    const Eigen::MatrixXd& sigma_map) const
 {
+    // Find min of model
+    double min = 1E300;
+    for(int i=0; i<ny; ++i)
+        for(int j=0; j<nx; ++j)
+            if(model(i, j) < min)
+                min = model(i, j);
+
     // Flatten data and turn it into standardised residuals
     Eigen::VectorXd ys(n);
     int k = 0;
@@ -89,7 +96,7 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
     {
         for(int j=0; j<nx; ++j)
         {
-            sd = sqrt(coeff0*coeff0 + coeff1*std::abs(model(i, j))
+            sd = sqrt(coeff0*coeff0 + coeff1*(model(i, j) - min)
                                     + pow(sigma_map(i, j), 2));
             ys(k++) = (data(i, j) - model(i, j))/sd;
             extra_log_determinant += 2*log(sd);
