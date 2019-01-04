@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <iostream>
 #include <DNest4/code/RNG.h>
-#include "NoiseModel.h"
+#include "NoiseModel2.h"
 
 using namespace CorrelatedNoise;
 
@@ -29,13 +29,13 @@ int main()
 
     // Do some MCMC
     double logl;
-    NoiseModel m(100, 101);
+    NoiseModel2 m(100, 101);
     m.from_prior(rng);
     logl = m.log_likelihood(data, model, sigma_map);
 
     for(int i=0; i<100000; ++i)
     {
-        NoiseModel m2 = m;
+        NoiseModel2 m2 = m;
         double logH = m2.perturb(rng);
         double logl2 = m2.log_likelihood(data, model, sigma_map);
         double logA = logH + logl2 - logl;

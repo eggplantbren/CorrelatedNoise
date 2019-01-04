@@ -33,7 +33,7 @@ void NoiseModel2::from_prior(DNest4::RNG& rng)
     }while(std::abs(coeff1) >= 100.0);
     coeff1 = exp(coeff1);
 
-    alpha = 0.25*rng.rand();
+    correlation_logit = 5.0*rng.randn();
 }
 
 double NoiseModel2::perturb(DNest4::RNG& rng)
@@ -68,8 +68,9 @@ double NoiseModel2::perturb(DNest4::RNG& rng)
     }
     else
     {
-        alpha += 0.25*rng.randh();
-        DNest4::wrap(alpha, 0.0, 0.25);
+        logH -= -0.5*pow(correlation_logit/5.0, 2);
+        correlation_logit += 5.0*rng.randh();
+        logH += -0.5*pow(correlation_logit/5.0, 2);
     }
 
     return logH;
@@ -80,6 +81,9 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
                                    const Eigen::MatrixXd& model,
                                    const Eigen::MatrixXd& sigma_map) const
 {
+    // Convert from logit
+    double alpha = 0.25*exp(correlation_logit)/(1.0 + exp(correlation_logit));
+
     // Find min of model
     double min = 1E300;
     for(int i=0; i<ny; ++i)
@@ -150,14 +154,12 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
         }
     }
 
-    // Make the sparse matrix
+    // Make the sparse precision matrix
     Eigen::SparseMatrix<double> sparse_mat(n, n);
     sparse_mat.setFromTriplets(triplets.begin(), triplets.end());
 
     // Term in the exponential
-    Eigen::VectorXd zs = sparse_mat * ys;
-    for(k=0; k<n; ++k)
-        logL += -0.5*zs(k)*zs(k);
+    logL += -0.5*ys.transpose()*sparse_mat*ys;
 
     // Use LDLT for log determinant
     Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> ldlt;
@@ -167,7 +169,7 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
     // log det of C, not of anything else!!!
     double log_det = 0.0;
     for(int i=0; i<n; ++i)
-        log_det += -2.0*log(D(i));
+        log_det += -log(D(i));
     logL += -0.5*log_det;
 
     if(std::isnan(logL) || std::isinf(logL))
@@ -178,12 +180,12 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
 
 void NoiseModel2::print(std::ostream& out) const
 {
-    out << coeff0 << ' ' << coeff1 << ' ' << alpha;
+    out << coeff0 << ' ' << coeff1 << ' ' << correlation_logit;
 }
 
 std::string NoiseModel2::description()
 {
-    return "coeff0, coeff1, alpha, ";
+    return "coeff0, coeff1, correlation_logit, ";
 }
 
 std::ostream& operator << (std::ostream& out, const NoiseModel2& m)
