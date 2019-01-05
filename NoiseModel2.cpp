@@ -96,18 +96,28 @@ double NoiseModel2::log_likelihood(const Eigen::MatrixXd& data,
     int k = 0;
     double extra_log_determinant = 0.0;
     double sd;
+    int num_non_masked = 0;
     for(int i=0; i<ny; ++i)
     {
         for(int j=0; j<nx; ++j)
         {
             sd = sqrt(coeff0*coeff0 + coeff1*(model(i, j) - min)
                                     + pow(sigma_map(i, j), 2));
-            ys(k++) = (data(i, j) - model(i, j))/sd;
-            extra_log_determinant += 2*log(sd);
+            if(sigma_map(i, j) < 1E100)
+            {
+                ys(k++) = (data(i, j) - model(i, j))/sd;
+                extra_log_determinant += 2*log(sd);
+                ++num_non_masked;
+            }
+            else
+            {
+                // Masked pixels
+                ys(k++) = 0.0;
+            }
         }
     }
 
-    double logL = -0.5*n*log(2.0*M_PI) - 0.5*extra_log_determinant;
+    double logL = -0.5*num_non_masked*log(2.0*M_PI) - 0.5*extra_log_determinant;
 
     std::vector<Eigen::Triplet<double>> triplets;
     int k1, k2;
