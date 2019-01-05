@@ -8,31 +8,25 @@ nx, ny = 100, 101
 n = nx*ny
 
 # Parameter
-alpha = 0.2
+alpha = 0.24
 
 @numba.jit
 def scalar(image):
-    f = 0.0
-
-    zs = np.zeros(n)
-    k = 0
+    Q = 0.0
     for x in range(nx):
         for y in range(ny):
-            zs[k] = image[x, y]
+            Q += image[x, y]**2
 
             if x > 0:
-                zs[k] += -alpha*image[x-1, y]
+                Q += -alpha*image[x-1, y]*image[x, y]
             if x < nx - 1:
-                zs[k] += -alpha*image[x+1, y]
+                Q += -alpha*image[x+1, y]*image[x, y]
 
             if y > 0:
-                zs[k] += -alpha*image[x, y-1]
+                Q += -alpha*image[x, y-1]*image[x, y]
             if y < ny - 1:
-                zs[k] += -alpha*image[x, y+1]
-
-            k += 1
-
-    return -0.5*np.sum(zs**2)
+                Q += -alpha*image[x, y+1]*image[x, y]
+    return -0.5*Q
 
 def matrix(image):
     M = np.zeros((n, n))
@@ -70,7 +64,7 @@ f = scalar(image)
 #print(matrix(image))
 #plt.show()
 
-for i in range(10000000):
+for i in range(5000000):
     proposal = image.copy()
     x, y = rng.randint(nx), rng.randint(ny)
     proposal[x, y] += np.exp(3.0*rng.randn())*rng.randn()
